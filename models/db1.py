@@ -1,0 +1,216 @@
+
+# from datetime import datetime, timedelta
+# from calendar import monthrange
+
+me = auth.user_id
+mdy = '%m/%d/%Y'
+mdy_date = IS_DATE(format='%m/%d/%Y')
+moneytize = lambda v: '{:,.2f}'.format(v)
+
+
+def is_float(s):
+    try:
+        float(s)
+    except ValueError:
+        return False
+    return True
+
+
+def next_month(date, force_day=0):
+    today_date = date
+    year = today_date.year
+    month = today_date.month
+    day = today_date.day
+
+    days_in_month = monthrange(year, month)[1]
+    next_month = today_date + timedelta(days=days_in_month)
+    if next_month.month - month > 1:
+        next_month = next_month.replace(month=month+1)
+        days_in_month = monthrange(next_month.year, next_month.month)[1]
+        next_month = next_month.replace(day=days_in_month)
+    days_in_month = monthrange(next_month.year, next_month.month)[1]
+    if ((force_day>0) and (days_in_month >= force_day)):
+        next_month = next_month.replace(day=force_day)        
+    return next_month
+
+
+# set up auth_membership
+db.auth_membership.user_id.label = 'User'
+db.auth_membership.group_id.label = 'Group'
+
+# initialize users and groups
+
+if db(db.auth_user.id).count() < 1:
+    user = db.auth_user.validate_and_insert(email="admin@email.com", first_name="admin", last_name="admin", password="Password1")
+    role = db.auth_group.insert(role="admin", description="admin group")
+    db.auth_membership.insert(user_id=user, group_id=role)
+
+
+db.define_table("region",
+    Field("region_name", "string", requires=IS_NOT_EMPTY(), unique=True),
+    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
+    Field("seq", "integer", readable=False, writable=False),
+    format="%(region_name)s"
+    )
+
+def _region_after_insert(f, i):
+    if f:
+        db(db.region.id==i).update(seq=i)
+
+db.region._after_insert = [_region_after_insert]
+
+# db.region.insert(region_name='Region 5 - Bicol', short_name='Bicol')
+# db.region.insert(region_name='Region 6 - Western Visayas', short_name='WVR')
+# db.region.insert(region_name='Region 7 - Central Visayas', short_name='CViR')
+# db.region.insert(region_name='Region 9 - Western Mindanao', short_name='WMR')
+# db.region.insert(region_name='Region 10 - Northeastern Mindanao', short_name='NEMR')
+# db.region.insert(region_name='Region 11 - Southeastern Mindanao', short_name='SEMR')
+# db.region.insert(region_name='Region 12 - Southern Mindanao', short_name='SMR')
+# db.region.insert(region_name='National Capital Region', short_name='NCR')
+# db.region.insert(region_name='ARMM', short_name='ARMM')
+# db.region.insert(region_name='CARAGA', short_name='CARAGA')
+
+db.define_table("branch",
+    Field("branch_name", "string", requires=IS_NOT_EMPTY(), unique=True),
+    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
+    Field("region_id", "reference region", label="Region"),
+    Field("seq", "integer", readable=False, writable=False),
+    format="%(branch_name)s"
+    )
+
+db.branch._after_insert = [lambda f, i: db(db.branch.id==i).update(seq=i)]
+
+
+# db.define_table("service_payment_type",
+#     Field("name", "string", requires=[IS_NOT_EMPTY(), IS_SLUG()]),
+#     format = '%(name)s')
+
+# db.define_table("service",
+#     Field("name","string", requires=[IS_NOT_EMPTY()]),
+#     Field("description","string"),
+#     Field("interest_rate","decimal(6,2)",default=0),
+#     Field("surcharge_rate","decimal(6,2)",default=0),
+#     Field("service_fee","decimal(6,2)",default=0),
+#     Field("minimum_amount", "decimal(15,2)", default=0, 
+#         represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
+#     # Field("maximum_amount", "decimal(15,2)", default=0, 
+#     #     represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
+#     Field("maximum_amount", "string", default=0, 
+#         represent=lambda v, r: '{:,}'.format(v) if is_float(v) else v),
+#     Field("payment_type_id", "reference service_payment_type", label="Payment Type"),
+#     Field("terms", "string", widget=SQLFORM.widgets.text.widget),
+#     Field("is_active", "boolean", label="Active", requires=IS_IN_SET([(True,'yes'), (False,'no')], zero=None), 
+#         default=(True,'yes'), widget=SQLFORM.widgets.options.widget),
+#     )
+
+# db.service.payment_type_id.requires = IS_IN_DB(db, db.service_payment_type.id, '%(name)s', zero=None)
+
+# db.auth_user.format = "%(last_name)s"
+
+# db.define_table("bank",
+#     Field("bank_name", "string", length=80),
+#     Field("short_name", "string", length=20),
+#     format="%(bank_name)s"
+#     )
+
+# if db(db.bank).isempty():
+#     db.bank.insert(bank_name="LandBank of the Philippines", short_name="LBP")
+#     db.bank.insert(bank_name="Development Bank of the Philippines", short_name="DBP")
+#     db.bank.insert(bank_name="Philippine National Bank", short_name="PNB")
+
+# db.define_table("loan",
+#     Field("loan_number", "string", requires=IS_NOT_EMPTY()),
+#     Field("member_id", "reference auth_user"),
+#     Field("service_id", "reference service"),
+#     Field("principal_amount", "decimal(15,2)", default=0),
+#     Field("interest_rate", "decimal(6,2)", default=0),
+#     Field("interest_amount", "decimal(15,2)", default=0),
+#     Field("surcharge_rate", "decimal(6,2)", default=0),
+#     Field("surcharge_amount", "decimal(15,2)", default=0),
+#     Field("service_fee_rate", "decimal(6,2)", default=0),
+#     Field("service_fee_amount", "decimal(15,2)", default=0),
+#     Field("terms", "integer", requires=IS_IN_SET(validTerms, zero=None)),
+#     Field("deductions_amount", "decimal(15,2)", default=0),
+#     Field("net_proceeds", "decimal(15,2)", default=0),
+
+#     Field("bank_id", "reference bank", label="Bank", requires=IS_IN_DB(db, db.bank.id, "%(bank_name)s", zero=None)),
+#     Field("account_number", "string", length=25),
+#     Field("account_name", "string"),
+
+#     auth.signature
+#     )
+
+# db.define_table("loan_number",
+#     Field("next_number", "integer"),
+#     Field("number_format"),
+#     )
+
+# db.define_table('department',
+#     Field('name', length=80, requires=IS_NOT_EMPTY()),
+#     Field('short_name', length=20, requires=IS_NOT_EMPTY()),
+#     format='%(name)s'
+#     )
+
+# db.define_table("member_info",
+#     Field("user_id", "reference auth_user"),
+#     Field("employee_no", length=20, requires=IS_NOT_EMPTY()),
+#     Field("birth_date","date", requires=[IS_DATE(format='%m/%d/%Y'),IS_NOT_EMPTY()]),
+#     Field("gender", length=6, requires=IS_IN_SET(["male", "female", ])),
+#     Field("civil_status", length=10, requires=IS_IN_SET(["single", "married", "divorced", "separated", "widowed", ])),
+#     Field("mobile_number", length=80),
+#     Field("home_address", length=128),
+#     Field("date_membership", "date", requires=IS_DATE(format='%m/%d/%Y')),
+#     Field("entrance_to_duty", "date", requires=IS_DATE(format='%m/%d/%Y')),
+#     auth.signature,
+#     )
+
+# db.define_table('service_record',
+#     Field('user_id', 'reference auth_user', label='Member'),
+#     Field('date_effective', 'date', requires=mdy_date),
+#     Field('department_id', 'reference department', label='Department'),
+#     Field('mem_position', length=50, label='Position'),
+#     Field('salary', 'decimal(15,2)', represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
+#     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved', 'disapproved', 'system']),
+#         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
+#     Field('reason', length=128, readable=False),
+#     auth.signature,
+#     )
+
+# db.define_table('service_record_attachment',
+#     Field('service_record_id', 'reference service_record'),
+#     Field('doc', 'upload'),
+#     )
+
+# db.define_table("member_info_update_request",
+#     Field("user_id", "reference auth_user", label='Member'),
+#     Field("first_name", length=80, requires=IS_NOT_EMPTY()),
+#     Field("last_name", length=80, requires=IS_NOT_EMPTY()),
+#     Field("middle_name", length=80),
+#     Field("employee_no", length=20),
+#     Field("birth_date", "date", requires=IS_EMPTY_OR(mdy_date)),
+#     Field("gender", length=6),
+#     Field("civil_status", length=10),
+#     Field("date_membership", "date", requires=IS_EMPTY_OR(mdy_date)),
+#     Field("entrance_to_duty", "date", requires=IS_EMPTY_OR(mdy_date)),
+#     Field("date_submitted", "date", default=datetime.today, requires=mdy_date),
+#     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved','disapproved']), 
+#         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
+#     Field('reason', length=128, readable=False),
+#     auth.signature,
+#     )
+
+# db.define_table("member_info_update_request_hist",
+#     Field('request', 'reference member_info_update_request'),
+#     Field("user_id", "reference auth_user", label='Member'),
+#     Field("first_name", length=80, requires=IS_NOT_EMPTY()),
+#     Field("last_name", length=80, requires=IS_NOT_EMPTY()),
+#     Field("middle_name", length=80),
+#     Field("employee_no", length=20),
+#     Field("birth_date", "date", requires=IS_EMPTY_OR(mdy_date)),
+#     Field("gender", length=6),
+#     Field("civil_status", length=10),
+#     Field("date_membership", "date", requires=IS_EMPTY_OR(mdy_date)),
+#     Field("entrance_to_duty", "date", requires=IS_EMPTY_OR(mdy_date)),
+#     Field("date_submitted", "date", requires=mdy_date),
+
+#     )

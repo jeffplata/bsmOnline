@@ -1,0 +1,129 @@
+timestamp: 2023-04-24T21:32:41.251803
+CREATE TABLE "auth_user"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "first_name" CHAR(128),
+    "last_name" CHAR(128),
+    "email" CHAR(512),
+    "password" CHAR(512),
+    "registration_key" CHAR(512),
+    "reset_password_key" CHAR(512),
+    "registration_id" CHAR(512)
+);
+success!
+timestamp: 2023-04-24T21:32:41.267395
+CREATE TABLE "auth_group"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "role" CHAR(512),
+    "description" TEXT
+);
+success!
+timestamp: 2023-04-24T21:32:41.283016
+CREATE TABLE "auth_membership"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "group_id" INTEGER REFERENCES "auth_group" ("id") ON DELETE CASCADE  
+);
+success!
+timestamp: 2023-04-24T21:32:41.283016
+CREATE TABLE "auth_permission"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "group_id" INTEGER REFERENCES "auth_group" ("id") ON DELETE CASCADE  ,
+    "name" CHAR(512),
+    "table_name" CHAR(512),
+    "record_id" INTEGER
+);
+success!
+timestamp: 2023-04-24T21:32:41.283016
+CREATE TABLE "auth_event"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "time_stamp" TIMESTAMP,
+    "client_ip" CHAR(512),
+    "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "origin" CHAR(512),
+    "description" TEXT
+);
+success!
+timestamp: 2023-04-24T21:32:41.300646
+CREATE TABLE "auth_cas"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "created_on" TIMESTAMP,
+    "service" CHAR(512),
+    "ticket" CHAR(512),
+    "renew" CHAR(1)
+);
+success!
+timestamp: 2023-04-24T21:57:53.485914
+CREATE TABLE "service_payment_type"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "name" CHAR(512)
+);
+success!
+timestamp: 2023-04-24T21:57:53.501540
+CREATE TABLE "service"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "name" CHAR(512),
+    "description" CHAR(512),
+    "interest_rate" DOUBLE,
+    "surcharge_rate" DOUBLE,
+    "service_fee" DOUBLE,
+    "minimum_amount" DOUBLE,
+    "maximum_amount" CHAR(512),
+    "payment_type_id" INTEGER REFERENCES "service_payment_type" ("id") ON DELETE CASCADE  ,
+    "terms" CHAR(512),
+    "is_active" CHAR(1)
+);
+success!
+timestamp: 2023-04-24T21:57:53.501540
+CREATE TABLE "bank"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "bank_name" CHAR(80),
+    "short_name" CHAR(20)
+);
+success!
+timestamp: 2023-04-24T22:02:43.941258
+CREATE TABLE "region"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "region_name" CHAR(512) UNIQUE,
+    "short_name" CHAR(20),
+    "seq" INTEGER
+);
+success!
+timestamp: 2023-04-24T22:50:00.781819
+CREATE TABLE "regiont"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "region_name" CHAR(512) UNIQUE,
+    "short_name" CHAR(20),
+    "seq" INTEGER
+);
+success!
+success!
+DROP TABLE "region";
+success!
+timestamp: 2023-04-25T15:49:17.033321
+CREATE TABLE "region"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "region_name" CHAR(512) UNIQUE,
+    "short_name" CHAR(20) UNIQUE,
+    "seq" INTEGER
+);
+success!
+DROP TABLE "region";
+success!
+timestamp: 2023-04-25T15:49:24.938576
+CREATE TABLE "region"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "region_name" CHAR(512) UNIQUE,
+    "short_name" CHAR(20) UNIQUE,
+    "seq" INTEGER
+);
+success!
+timestamp: 2023-04-25T16:25:05.305086
+CREATE TABLE "branch"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "branch_name" CHAR(512) UNIQUE,
+    "short_name" CHAR(20) UNIQUE,
+    "region_id" INTEGER REFERENCES "region" ("id") ON DELETE CASCADE  ,
+    "seq" INTEGER
+);
+success!
