@@ -44,41 +44,20 @@ if db(db.auth_user.id).count() < 1:
     user = db.auth_user.validate_and_insert(email="admin@email.com", first_name="admin", last_name="admin", password="Password1")
     role = db.auth_group.insert(role="admin", description="admin group")
     db.auth_membership.insert(user_id=user, group_id=role)
+    db.auth_permission.insert(group_id=role, name='manage', table_name='auth_user')
 
-
-db.define_table("region",
-    Field("region_name", "string", requires=IS_NOT_EMPTY(), unique=True),
-    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
-    Field("seq", "integer", readable=False, writable=False),
-    format="%(region_name)s"
-    )
-
-def _region_after_insert(f, i):
-    if f:
-        db(db.region.id==i).update(seq=i)
-
-db.region._after_insert = [_region_after_insert]
-
-# db.region.insert(region_name='Region 5 - Bicol', short_name='Bicol')
-# db.region.insert(region_name='Region 6 - Western Visayas', short_name='WVR')
-# db.region.insert(region_name='Region 7 - Central Visayas', short_name='CViR')
-# db.region.insert(region_name='Region 9 - Western Mindanao', short_name='WMR')
-# db.region.insert(region_name='Region 10 - Northeastern Mindanao', short_name='NEMR')
-# db.region.insert(region_name='Region 11 - Southeastern Mindanao', short_name='SEMR')
-# db.region.insert(region_name='Region 12 - Southern Mindanao', short_name='SMR')
-# db.region.insert(region_name='National Capital Region', short_name='NCR')
-# db.region.insert(region_name='ARMM', short_name='ARMM')
-# db.region.insert(region_name='CARAGA', short_name='CARAGA')
-
-db.define_table("branch",
-    Field("branch_name", "string", requires=IS_NOT_EMPTY(), unique=True),
-    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
-    Field("region_id", "reference region", label="Region"),
-    Field("seq", "integer", readable=False, writable=False),
-    format="%(branch_name)s"
-    )
-
-db.branch._after_insert = [lambda f, i: db(db.branch.id==i).update(seq=i)]
+if db(db.auth_group.id).count() < 2:
+    db.auth_group.insert(role='wh supervisor')
+    db.auth_group.insert(role='wh asssitant')
+    db.auth_group.insert(role='br admin')
+    db.auth_group.insert(role='br user')
+    db.auth_group.insert(role='cashier')
+    db.auth_group.insert(role='sdo')
+    db.auth_group.insert(role='sco')
+    db.auth_group.insert(role='ro admin')
+    db.auth_group.insert(role='ro user')
+    db.auth_group.insert(role='co admin')
+    db.auth_group.insert(role='co user')
 
 
 # db.define_table("service_payment_type",

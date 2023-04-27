@@ -8,49 +8,43 @@
 def index():
     return locals()
 
-# # ---- Smart Grid (example) -----
-# @auth.requires_membership('admin') # can only be accessed by members of admin groupd
-# def grid():
-#     # response.view = 'generic.html' # use a generic view
-#     tablename = request.args(0)
-#     if not tablename in db.tables: raise HTTP(403)
-#     grid = SQLFORM.smartgrid(db[tablename], args=[tablename], deletable=False, editable=False)
-#     return dict(grid=grid)
-
-# @auth.requires_membership('admin') 
-# def library():
-#     query = db[request.vars['table']]
-#     title = ''
-#     if request.vars['table'] == 'auth_user':
-#         title = 'User'
-#     if request.args(0) in ['view', 'update', 'add']:
-#         title = f"{request.args(0).capitalize()} {title}"
-#     grid = SQLFORM.grid(query, deletable=False, editable=True, csv=False)
-#     return dict(grid=grid, title=title)
 
 @auth.requires_membership('admin') 
 def library(table, title=None, action=None):
     query = db[table]
     if not title:
         title = table.capitalize()
-    if action in ['view', 'edit', 'add']:
+    if action in ['view', 'edit', 'new']:
         title = f"{action.capitalize()} {title.lower()}"
     grid = SQLFORM.grid(query, deletable=False, editable=True, csv=False)
     # return dict(grid=grid, title=title)
     return (grid, title)
 
 
-@auth.requires_membership('admin') 
+@auth.requires(auth.has_permission('manage', 'auth_user'))
 def user_manage():
+    response.view = 'default/library.load'
+    title = 'User'
+    if request.args(0) in ['view', 'edit', 'new']:
+        title = f"{request.args(0).capitalize()} user"
+    query = db['auth_user']
     if request.args(0) == 'new':
         db.auth_user.password.readable = False
         db.auth_user.password.writable = False
         db.auth_user.password.default = db.auth_user.password.requires[0]('Password1')[0]
+        if db.auth_user.region:
+            db.auth_user.region = db.auth_user.region.default = db.auth_user.region
+    fields = 'first_name,last_name,middle_name,email,region,branch'
 
-    grid, title = library(db['auth_user'], 'User', request.args(0))
+    grid = SQLFORM.grid(query, 
+        fields=[db.auth_user[f] for f in fields.split(',')],
+        deletable=False, csv=False)
+    # grid, title = library(db['auth_user'], 'User', request.args(0))
     if grid.update_form:
         grid.update_form.element('#auth_user_email')['_readonly'] = 'readonly'
-        grid.update_form.element('#auth_user_password__row')['_hidden'] = 'hidden'
+        if auth.has_membership('admin', int(request.args(2)) ):
+            grid.update_form.element('#auth_user_region')['_disabled'] = 'disabled'
+            grid.update_form.element('#auth_user_branch')['_disabled'] = 'disabled'
     return dict(grid=grid, title=title)
 
 

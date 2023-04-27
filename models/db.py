@@ -91,8 +91,84 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 # -------------------------------------------------------------------------
 # create all tables needed by auth, maybe add a list of extra fields
 # -------------------------------------------------------------------------
-auth.settings.extra_fields['auth_user'] = []
+
+
+db.define_table("region",
+    Field("region_name", "string", requires=IS_NOT_EMPTY(), unique=True),
+    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
+    Field("seq", "integer", readable=False, writable=False),
+    format="%(region_name)s"
+    )
+
+def _region_after_insert(f, i):
+    if f:
+        db(db.region.id==i).update(seq=i)
+
+db.region._after_insert = [_region_after_insert]
+
+# db.region.insert(region_name='Region 5 - Bicol', short_name='Bicol')
+# db.region.insert(region_name='Region 6 - Western Visayas', short_name='WVR')
+# db.region.insert(region_name='Region 7 - Central Visayas', short_name='CViR')
+# db.region.insert(region_name='Region 9 - Western Mindanao', short_name='WMR')
+# db.region.insert(region_name='Region 10 - Northeastern Mindanao', short_name='NEMR')
+# db.region.insert(region_name='Region 11 - Southeastern Mindanao', short_name='SEMR')
+# db.region.insert(region_name='Region 12 - Southern Mindanao', short_name='SMR')
+# db.region.insert(region_name='National Capital Region', short_name='NCR')
+# db.region.insert(region_name='ARMM', short_name='ARMM')
+# db.region.insert(region_name='CARAGA', short_name='CARAGA')
+
+db.define_table("branch",
+    Field("branch_name", "string", requires=IS_NOT_EMPTY(), unique=True),
+    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
+    Field("region_id", "reference region", label="Region"),
+    Field("seq", "integer", readable=False, writable=False),
+    format="%(branch_name)s"
+    )
+
+db.branch._after_insert = [lambda f, i: db(db.branch.id==i).update(seq=i)]
+
+# auth.settings.extra_fields['auth_user'] = [
+#     Field("middle_name", length=128, default="", map_none=''),
+#     Field("region", "reference region", map_none=''),
+#     Field("branch", "reference branch", map_none=''),
+#     ]
+# auth.settings.extra_fields['auth_user'] = []
+
+
+db.define_table(
+    auth.settings.table_user_name,
+    Field('first_name', length=128, default=''),
+    Field('last_name', length=128, default=''),
+    Field('middle_name', length=128, default='', map_none=''),
+    Field('email', length=128, default='', unique=True), # required
+    Field('password', 'password', length=512,            # required
+          readable=False, writable=False, label='Password'),
+    Field("region", "reference region", map_none=''),
+    Field("branch", "reference branch", map_none=''),
+
+    Field('registration_key', length=512,                # required
+          writable=False, readable=False, default=''),
+    Field('reset_password_key', length=512,              # required
+          writable=False, readable=False, default=''),
+    Field('registration_id', length=512,                 # required
+          writable=False, readable=False, default=''),
+    format='%(first_name)s %(last_name)s (%(id)s)'
+    )
+
+## do not forget validators
+custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
+custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
+custom_auth_table.last_name.requires =   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
+# custom_auth_table.password.requires = [IS_STRONG(), CRYPT()]
+custom_auth_table.password.requires = [CRYPT()]
+custom_auth_table.email.requires = [
+  IS_EMAIL(error_message=auth.messages.invalid_email),
+  IS_NOT_IN_DB(db, custom_auth_table.email)]
+
+auth.settings.table_user = custom_auth_table # tell auth to use custom_auth_table
+
 auth.define_tables(username=False, signature=False)
+
 
 # -------------------------------------------------------------------------
 # configure email

@@ -11,7 +11,7 @@ response.menu = [
 
 m = ('Library', False, None, [])
 
-if auth.has_permission('manage', 'user', 0):
+if auth.has_permission('manage', 'auth_user', 0):
     m[3].append(('Users', False, URL('default', 'user_manage.load', vars={'table':'auth_user'}, user_signature=True)))
 
 if m[3]:

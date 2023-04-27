@@ -127,3 +127,20 @@ CREATE TABLE "branch"(
     "seq" INTEGER
 );
 success!
+timestamp: 2023-04-27T09:36:59.051169
+ALTER TABLE "auth_user" ADD "middle_name" CHAR(128);
+timestamp: 2023-04-27T09:36:59.051169
+ALTER TABLE "auth_user" ADD "region" INTEGER REFERENCES "region" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-04-27T09:36:59.066791
+ALTER TABLE "auth_user" ADD "branch" INTEGER REFERENCES "branch" ("id") ON DELETE CASCADE  ;
+success!
+success!
+DROP TABLE "auth_group";
+success!
+timestamp: 2023-04-27T14:32:08.648311
+CREATE TABLE "auth_group"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "role" CHAR(512),
+    "description" TEXT
+);
+success!
