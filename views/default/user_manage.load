@@ -1,1 +1,11 @@
-{{extend 'default\library.load'}}
+<h4>{{=title}}</h4>
+{{if grid.view_form or grid.update_form or grid.create_form:}}
+    <div class="col-md-6">
+        {{=grid}}
+        {{if grid.update_form:}}
+            {{=LOAD(f='user_group.load', ajax=True, target='user_group_div')}}
+        {{pass}}
+    </div>
+{{else:}}
+    {{=grid}}
+{{pass}}
