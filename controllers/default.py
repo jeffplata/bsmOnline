@@ -60,8 +60,8 @@ def user_manage():
     return dict(grid=grid, title=title)
 
 
+@auth.requires(auth.has_permission('manage', 'auth_user'))
 def user_group():
-
     user = db(db.auth_user.id==session.selected_user).select().first()
     def can_delete_group(row):
         admin_group_id = auth.id_group('admin')
