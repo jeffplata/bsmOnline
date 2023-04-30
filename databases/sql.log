@@ -144,3 +144,6 @@ CREATE TABLE "auth_group"(
     "description" TEXT
 );
 success!
+timestamp: 2023-04-30T14:46:39.247359
+ALTER TABLE "auth_group" ADD "ranks" INTEGER;
+success!

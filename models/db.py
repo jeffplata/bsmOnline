@@ -167,8 +167,15 @@ custom_auth_table.email.requires = [
 
 auth.settings.table_user = custom_auth_table # tell auth to use custom_auth_table
 
+# customize auth_group
+auth.settings.extra_fields['auth_group'] = [
+    Field("ranks", "integer", readable=False, writable=False)
+    ]
+
+
 auth.define_tables(username=False, signature=False)
 
+db.auth_group._after_insert = [lambda f, i: db(db.auth_group.id==i).update(ranks=i)]
 
 # -------------------------------------------------------------------------
 # configure email

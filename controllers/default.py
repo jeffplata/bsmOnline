@@ -24,7 +24,7 @@ def library(table, title=None, action=None):
 
 @auth.requires(auth.has_permission('manage', 'auth_user'))
 def user_manage():
-    title = 'User'
+    title = 'Users'
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} user"
 
@@ -32,6 +32,8 @@ def user_manage():
     u = db.auth_user(auth.user_id)
     if auth.has_membership('br admin'):
         query = db(db.auth_user.branch==u.branch)
+    if auth.has_membership('ro admin'):
+        query = db(db.auth_user.region==u.region)
     if request.args(0) == 'new':
         db.auth_user.password.readable = False
         db.auth_user.password.writable = False
@@ -85,6 +87,32 @@ def user_group():
         redirect(URL('user_group', user_signature=True))
 
     return dict(grid=grid, form=form)
+
+
+@auth.requires(auth.has_permission('manage', 'auth_user'))
+def group_manage():
+    title = 'Groups'
+    query = db['auth_group']
+    _links = [
+        dict(header='Rank', body=lambda r: (
+            A('Up', _href=URL("#"), cid=request.cid), SPAN(' '),
+            A('Dn', _href=URL("#"), cid=request.cid))),
+        ]
+    grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
+        formname='group_grid', links=_links)
+    return dict(title=title, grid=grid)
+
+
+def group_rank_up():
+    this_grp_id = request.args(0)
+    this_grp = db(db.auth_group.id==this_grp_id).select().first()
+    targ_grp = db(db.auth_group.ranks<this_grp.ranks).select(orderby=db.auth_group.ranks).last()
+
+    temp_rank = g.ranks
+    g.ranks = 
+
+
 
 # ---- Action for login/register/etc (required for auth) -----
 def user():
