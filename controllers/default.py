@@ -95,8 +95,8 @@ def group_manage():
     query = db['auth_group']
     _links = [
         dict(header='Rank', body=lambda r: (
-            A('Up', _href=URL("#"), cid=request.cid), SPAN(' '),
-            A('Dn', _href=URL("#"), cid=request.cid))),
+            A('Up', _href=URL('default', 'group_rank_up', args=[r.id, 'up']), cid=request.cid), SPAN(' '),
+            A('Dn', _href=URL('default', 'group_rank_up', args=[r.id, 'down']), cid=request.cid))),
         ]
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
@@ -105,12 +105,20 @@ def group_manage():
 
 
 def group_rank_up():
-    this_grp_id = request.args(0)
-    this_grp = db(db.auth_group.id==this_grp_id).select().first()
-    targ_grp = db(db.auth_group.ranks<this_grp.ranks).select(orderby=db.auth_group.ranks).last()
-
-    temp_rank = g.ranks
-    g.ranks = 
+    curr_grp_id = request.args(0)
+    direction = request.args(1)
+    curr_grp = db(db.auth_group.id==curr_grp_id).select().first()
+    if direction=='up':
+        targ_grp = db(db.auth_group.ranks<curr_grp.ranks).select(orderby=db.auth_group.ranks).last()
+    elif direction=='down':
+        targ_grp = db(db.auth_group.ranks>curr_grp.ranks).select(orderby=db.auth_group.ranks).first()
+    if targ_grp:
+        temp_rank = curr_grp.ranks
+        curr_grp.ranks = targ_grp.ranks
+        targ_grp.ranks = temp_rank
+        curr_grp.update_record()
+        targ_grp.update_record()
+    redirect(URL('default', 'group_manage.load', user_signature=True))
 
 
 
