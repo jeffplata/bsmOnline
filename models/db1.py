@@ -47,17 +47,17 @@ if db(db.auth_user.id).count() < 1:
     db.auth_permission.insert(group_id=role, name='manage', table_name='auth_user')
 
 if db(db.auth_group.id).count() < 2:
-    db.auth_group.insert(role='wh supervisor')
-    db.auth_group.insert(role='wh asssitant')
+    db.auth_group.insert(role='co admin')
+    db.auth_group.insert(role='ro admin')
     db.auth_group.insert(role='br admin')
+    db.auth_group.insert(role='co user')
+    db.auth_group.insert(role='ro user')
     db.auth_group.insert(role='br user')
+    db.auth_group.insert(role='wh supervisor')
+    db.auth_group.insert(role='wh asssistant')
     db.auth_group.insert(role='cashier')
     db.auth_group.insert(role='sdo')
     db.auth_group.insert(role='sco')
-    db.auth_group.insert(role='ro admin')
-    db.auth_group.insert(role='ro user')
-    db.auth_group.insert(role='co admin')
-    db.auth_group.insert(role='co user')
 
 
 # db.define_table("service_payment_type",

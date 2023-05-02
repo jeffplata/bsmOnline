@@ -101,7 +101,8 @@ def group_manage():
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
         formname='group_grid', links=_links)
-    return dict(title=title, grid=grid)
+    links = DIV(SPAN('Move item: '), A('Up', _href=URL('default', 'group_rank_up', args=['up']), cid=request.cid))
+    return dict(title=title, grid=grid, links=links)
 
 
 def group_rank_up():

@@ -1,2 +1,24 @@
+<style>
+    .selected {font-weight: bold;
+        background: #17a2b8}
+</style>
 <h4>{{=title}}</h4>
 {{=grid}}
+{{if links:}}
+    {{=links}}
+{{pass}}
+
+
+<script>
+    var classes = '';
+    $("table tr").click(function(){
+        $('.selected').addClass(classes);
+        $(this).addClass('selected').siblings().removeClass('selected');
+        classes = $(this).attr('class');
+        $(this).removeClass('w2p_odd odd w2p_even even');
+    });
+
+    $('.ok').on('click', function(e){
+        alert($("table tr.selected td:first").html());
+    });
+</script>
