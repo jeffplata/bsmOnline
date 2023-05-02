@@ -18,7 +18,10 @@
         $(this).removeClass('w2p_odd odd w2p_even even');
     });
 
-    $('.ok').on('click', function(e){
-        alert($("table tr.selected td:first").html());
-    });
+    $('#up').on('click', function(e){
+        // alert($('table tr.selected').attr('id'));
+        var id = $('table tr.selected').attr('id');
+        ajax("{{URL('default', 'group_rank_change')}}" + '?id=' + id, [], 'target' );
+    })
+
 </script>

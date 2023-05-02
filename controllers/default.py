@@ -98,12 +98,22 @@ def group_manage():
             A('Up', _href=URL('default', 'group_rank_up', args=[r.id, 'up']), cid=request.cid), SPAN(' '),
             A('Dn', _href=URL('default', 'group_rank_up', args=[r.id, 'down']), cid=request.cid))),
         ]
+    # db.auth_group.id.readable = False
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
         formname='group_grid', links=_links)
-    links = DIV(SPAN('Move item: '), A('Up', _href=URL('default', 'group_rank_up', args=['up']), cid=request.cid))
+    links = DIV(SPAN('Move item: '), 
+        BUTTON('Up', _id='up', cid=request.cid),
+        BR(),
+        DIV(_id='target', _style='height: 150px;')
+        )
     return dict(title=title, grid=grid, links=links)
 
+
+def group_rank_change():
+    print(request.vars)
+    id = request.vars['id']
+    return id
 
 def group_rank_up():
     curr_grp_id = request.args(0)
