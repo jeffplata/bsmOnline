@@ -8,7 +8,6 @@
     {{=links}}
 {{pass}}
 
-
 <script>
     var classes = '';
     $("table tr").click(function(){
@@ -18,10 +17,44 @@
         $(this).removeClass('w2p_odd odd w2p_even even');
     });
 
+    function move_item(direction='up') {
+        var row = $('table tr.selected');
+        var next_row = row.prev('tr'); 
+        if (direction=='down') {
+            next_row = row.next('tr')
+        } else if (direction=='top') {
+            next_row = $(row).closest('tbody').children('tr:first');
+        } else if (direction=='bottom') {
+            next_row = $(row).closest('tbody').children('tr:last');
+        };
+        var id = $(row).attr('id');
+        var next_id = $(next_row).attr('id');
+        ajax("{{=URL('default', 'group_rank_change')}}" + '?id=' + id + '&next_id=' + next_id + '&direction=' + direction, [], );
+        if ((direction=='up') || (direction=='top')) {
+            if (next_row.length) {
+                next_row.before(row);
+            }
+        } else {
+            if (next_row.length) {
+                next_row.after(row);
+            }
+        }
+    };
+
     $('#up').on('click', function(e){
-        // alert($('table tr.selected').attr('id'));
-        var id = $('table tr.selected').attr('id');
-        ajax("{{URL('default', 'group_rank_change')}}" + '?id=' + id, [], 'target' );
-    })
+        move_item('up');
+    });
+
+    $('#down').on('click', function(e){
+        move_item('down');
+    });
+
+    $('#top').on('click', function(e){
+        move_item('top');
+    });
+
+    $('#bottom').on('click', function(e){
+        move_item('bottom');
+    });
 
 </script>

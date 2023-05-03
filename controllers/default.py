@@ -5,6 +5,7 @@
 # -------------------------------------------------------------------------
 
 # ---- example index page ----
+
 @auth.requires_login()
 def index():
     return locals()
@@ -28,12 +29,14 @@ def user_manage():
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} user"
 
-    query = db['auth_user']
     u = db.auth_user(auth.user_id)
-    if auth.has_membership('br admin'):
-        query = db(db.auth_user.branch==u.branch)
-    if auth.has_membership('ro admin'):
+    if auth.has_membership('admin'):
+        query = db['auth_user']
+    elif auth.has_membership('ro admin'):
         query = db(db.auth_user.region==u.region)
+    elif auth.has_membership('br admin'):
+        query = db(db.auth_user.branch==u.branch)
+    
     if request.args(0) == 'new':
         db.auth_user.password.readable = False
         db.auth_user.password.writable = False
@@ -64,20 +67,40 @@ def user_manage():
 
 @auth.requires(auth.has_permission('manage', 'auth_user'))
 def user_group():
+    if request.args(0)=='delete':
+        db(db.auth_membership.id==request.args(2)).delete()
+        redirect(URL('user_group', user_signature=True))
+    
     user = db(db.auth_user.id==session.selected_user).select().first()
     def can_delete_group(row):
         admin_group_id = auth.id_group('admin')
         return not (row.group_id==admin_group_id and user.email=='admin@email.com')
+    # def ondelete(table, record_id):
+    #     db(db[table]['id']==record_id).delete()
+    #     redirect(URL('user_group', user_signature=True))
 
-    user_groups = db(db.auth_membership.user_id==session.selected_user).select()
-    ug = [g.group_id for g in user_groups]
-    group_options = db(~db.auth_group.id.belongs(ug))
-    db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
+    _link = [ dict(header='', body=lambda r: A('Delete', _class1='button btn btn-default btn-secondary', 
+            _href=URL('default','user_group', args=['delete', 'auth_membership', r.id], user_signature=True), cid=request.cid )
+            if can_delete_group(r) else ''
+            ) ]
 
     query = db.auth_membership.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.auth_membership.group_id], 
-        create=False, deletable=can_delete_group , editable=False, details=False, searchable=False, csv=False,
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
+        links=_link,
+        # ondelete=ondelete
         )
+
+    curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
+        join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
+        orderby=db.auth_group.ranks
+        ).first()['auth_group.ranks']
+    user_groups = db(db.auth_membership.user_id==session.selected_user).select()
+    ug = [g.group_id for g in user_groups]
+    group_options = db(~db.auth_group.id.belongs(ug) & (db.auth_group.ranks>=curr_user_highest_rank))
+
+    db.auth_membership.user_id.default = session.selected_user
+    db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
     form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add')
 
     if form.process(dbio=False).accepted:
@@ -93,44 +116,38 @@ def user_group():
 def group_manage():
     title = 'Groups'
     query = db['auth_group']
-    _links = [
-        dict(header='Rank', body=lambda r: (
-            A('Up', _href=URL('default', 'group_rank_up', args=[r.id, 'up']), cid=request.cid), SPAN(' '),
-            A('Dn', _href=URL('default', 'group_rank_up', args=[r.id, 'down']), cid=request.cid))),
-        ]
-    # db.auth_group.id.readable = False
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
-        formname='group_grid', links=_links)
+        formname='group_grid', links=None)
     links = DIV(SPAN('Move item: '), 
-        BUTTON('Up', _id='up', cid=request.cid),
+        BUTTON('Up', _id='up'), SPAN(' '),
+        BUTTON('Down', _id='down'), SPAN(' '),
+        BUTTON('Top', _id='top'), SPAN(' '),
+        BUTTON('Bottom', _id='bottom'),
         BR(),
-        DIV(_id='target', _style='height: 150px;')
+        DIV(_id='target')
         )
-    return dict(title=title, grid=grid, links=links)
+    return dict(title=title, grid=grid, links=links if auth.has_membership('admin') else None)
 
 
 def group_rank_change():
-    print(request.vars)
     id = request.vars['id']
-    return id
-
-def group_rank_up():
-    curr_grp_id = request.args(0)
-    direction = request.args(1)
-    curr_grp = db(db.auth_group.id==curr_grp_id).select().first()
-    if direction=='up':
-        targ_grp = db(db.auth_group.ranks<curr_grp.ranks).select(orderby=db.auth_group.ranks).last()
-    elif direction=='down':
-        targ_grp = db(db.auth_group.ranks>curr_grp.ranks).select(orderby=db.auth_group.ranks).first()
-    if targ_grp:
-        temp_rank = curr_grp.ranks
-        curr_grp.ranks = targ_grp.ranks
-        targ_grp.ranks = temp_rank
-        curr_grp.update_record()
-        targ_grp.update_record()
-    redirect(URL('default', 'group_manage.load', user_signature=True))
-
+    next_id = request.vars['next_id']
+    direction = request.vars['direction']
+    if is_float(next_id):
+        this_row = db(db.auth_group.id==id).select().first()
+        next_row = db(db.auth_group.id==next_id).select().first()
+        if direction in ['up','down']:
+            temp = this_row.ranks
+            this_row.ranks = next_row.ranks
+            next_row.ranks = temp
+        elif direction == 'top':
+            this_row.ranks = next_row.ranks -1
+        else: # 'bottom'
+            this_row.ranks = next_row.ranks +1
+        this_row.update_record()
+        next_row.update_record()
+    return
 
 
 # ---- Action for login/register/etc (required for auth) -----
