@@ -60,136 +60,50 @@ if db(db.auth_group.id).count() < 2:
     db.auth_group.insert(role='sco')
 
 
-# db.define_table("service_payment_type",
-#     Field("name", "string", requires=[IS_NOT_EMPTY(), IS_SLUG()]),
-#     format = '%(name)s')
+db.define_table('warehouse',
+    Field('warehouse_name', 'string', length=80, unique=True),
+    Field('warehouse_code', 'string', length=20, unique=True),
+    Field('branch_id', db.branch, label='Branch', ondelete='RESTRICT'),
+    format='%(warehouse_name)s')
 
-# db.define_table("service",
-#     Field("name","string", requires=[IS_NOT_EMPTY()]),
-#     Field("description","string"),
-#     Field("interest_rate","decimal(6,2)",default=0),
-#     Field("surcharge_rate","decimal(6,2)",default=0),
-#     Field("service_fee","decimal(6,2)",default=0),
-#     Field("minimum_amount", "decimal(15,2)", default=0, 
-#         represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
-#     # Field("maximum_amount", "decimal(15,2)", default=0, 
-#     #     represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
-#     Field("maximum_amount", "string", default=0, 
-#         represent=lambda v, r: '{:,}'.format(v) if is_float(v) else v),
-#     Field("payment_type_id", "reference service_payment_type", label="Payment Type"),
-#     Field("terms", "string", widget=SQLFORM.widgets.text.widget),
-#     Field("is_active", "boolean", label="Active", requires=IS_IN_SET([(True,'yes'), (False,'no')], zero=None), 
-#         default=(True,'yes'), widget=SQLFORM.widgets.options.widget),
-#     )
+db.warehouse.warehouse_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.warehouse.warehouse_name)]
+db.warehouse.warehouse_code.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.warehouse.warehouse_code)]
 
-# db.service.payment_type_id.requires = IS_IN_DB(db, db.service_payment_type.id, '%(name)s', zero=None)
 
-# db.auth_user.format = "%(last_name)s"
+db.define_table('container',
+    Field('container_name', 'string', length=20, unique=True),
+    Field('container_shortname', 'string', length=20, unique=True),
+    Field('weight', 'decimal(8,2)'),
+    format='%(container_shortname)s')
 
-# db.define_table("bank",
-#     Field("bank_name", "string", length=80),
-#     Field("short_name", "string", length=20),
-#     format="%(bank_name)s"
-#     )
+db.container.container_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.container.container_name)]
+db.container.container_shortname.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.container.container_shortname)]
 
-# if db(db.bank).isempty():
-#     db.bank.insert(bank_name="LandBank of the Philippines", short_name="LBP")
-#     db.bank.insert(bank_name="Development Bank of the Philippines", short_name="DBP")
-#     db.bank.insert(bank_name="Philippine National Bank", short_name="PNB")
 
-# db.define_table("loan",
-#     Field("loan_number", "string", requires=IS_NOT_EMPTY()),
-#     Field("member_id", "reference auth_user"),
-#     Field("service_id", "reference service"),
-#     Field("principal_amount", "decimal(15,2)", default=0),
-#     Field("interest_rate", "decimal(6,2)", default=0),
-#     Field("interest_amount", "decimal(15,2)", default=0),
-#     Field("surcharge_rate", "decimal(6,2)", default=0),
-#     Field("surcharge_amount", "decimal(15,2)", default=0),
-#     Field("service_fee_rate", "decimal(6,2)", default=0),
-#     Field("service_fee_amount", "decimal(15,2)", default=0),
-#     Field("terms", "integer", requires=IS_IN_SET(validTerms, zero=None)),
-#     Field("deductions_amount", "decimal(15,2)", default=0),
-#     Field("net_proceeds", "decimal(15,2)", default=0),
+db.define_table('commodity',
+    Field('commodity_name', 'string', length=80, unique=True),
+    Field('is_cereal', 'boolean', default=True),
+    format='%(commodity_name)s')
 
-#     Field("bank_id", "reference bank", label="Bank", requires=IS_IN_DB(db, db.bank.id, "%(bank_name)s", zero=None)),
-#     Field("account_number", "string", length=25),
-#     Field("account_name", "string"),
+db.commodity.commodity_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.commodity.commodity_name)]
+db.commodity.is_cereal.default = True
 
-#     auth.signature
-#     )
 
-# db.define_table("loan_number",
-#     Field("next_number", "integer"),
-#     Field("number_format"),
-#     )
+db.define_table('variety',
+    Field('variety_name', 'string', length=20, unique=True),
+    Field('commodity_id', db.commodity, label='Commodity', ondelete='RESTRICT'),
+    format='%(variety_name)s')
 
-# db.define_table('department',
-#     Field('name', length=80, requires=IS_NOT_EMPTY()),
-#     Field('short_name', length=20, requires=IS_NOT_EMPTY()),
-#     format='%(name)s'
-#     )
+db.variety.variety_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.variety.variety_name)]
 
-# db.define_table("member_info",
-#     Field("user_id", "reference auth_user"),
-#     Field("employee_no", length=20, requires=IS_NOT_EMPTY()),
-#     Field("birth_date","date", requires=[IS_DATE(format='%m/%d/%Y'),IS_NOT_EMPTY()]),
-#     Field("gender", length=6, requires=IS_IN_SET(["male", "female", ])),
-#     Field("civil_status", length=10, requires=IS_IN_SET(["single", "married", "divorced", "separated", "widowed", ])),
-#     Field("mobile_number", length=80),
-#     Field("home_address", length=128),
-#     Field("date_membership", "date", requires=IS_DATE(format='%m/%d/%Y')),
-#     Field("entrance_to_duty", "date", requires=IS_DATE(format='%m/%d/%Y')),
-#     auth.signature,
-#     )
 
-# db.define_table('service_record',
-#     Field('user_id', 'reference auth_user', label='Member'),
-#     Field('date_effective', 'date', requires=mdy_date),
-#     Field('department_id', 'reference department', label='Department'),
-#     Field('mem_position', length=50, label='Position'),
-#     Field('salary', 'decimal(15,2)', represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
-#     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved', 'disapproved', 'system']),
-#         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
-#     Field('reason', length=128, readable=False),
-#     auth.signature,
-#     )
+doc_stamp = db.Table(db, 'doc_stamp',
+    Field('doc_date', 'date', default=request.now, requires=IS_DATE(format='%m/%d/%Y') ),
+    Field('doc_number', 'string', length=40, unique=True))
 
-# db.define_table('service_record_attachment',
-#     Field('service_record_id', 'reference service_record'),
-#     Field('doc', 'upload'),
-#     )
 
-# db.define_table("member_info_update_request",
-#     Field("user_id", "reference auth_user", label='Member'),
-#     Field("first_name", length=80, requires=IS_NOT_EMPTY()),
-#     Field("last_name", length=80, requires=IS_NOT_EMPTY()),
-#     Field("middle_name", length=80),
-#     Field("employee_no", length=20),
-#     Field("birth_date", "date", requires=IS_EMPTY_OR(mdy_date)),
-#     Field("gender", length=6),
-#     Field("civil_status", length=10),
-#     Field("date_membership", "date", requires=IS_EMPTY_OR(mdy_date)),
-#     Field("entrance_to_duty", "date", requires=IS_EMPTY_OR(mdy_date)),
-#     Field("date_submitted", "date", default=datetime.today, requires=mdy_date),
-#     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved','disapproved']), 
-#         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
-#     Field('reason', length=128, readable=False),
-#     auth.signature,
-#     )
-
-# db.define_table("member_info_update_request_hist",
-#     Field('request', 'reference member_info_update_request'),
-#     Field("user_id", "reference auth_user", label='Member'),
-#     Field("first_name", length=80, requires=IS_NOT_EMPTY()),
-#     Field("last_name", length=80, requires=IS_NOT_EMPTY()),
-#     Field("middle_name", length=80),
-#     Field("employee_no", length=20),
-#     Field("birth_date", "date", requires=IS_EMPTY_OR(mdy_date)),
-#     Field("gender", length=6),
-#     Field("civil_status", length=10),
-#     Field("date_membership", "date", requires=IS_EMPTY_OR(mdy_date)),
-#     Field("entrance_to_duty", "date", requires=IS_EMPTY_OR(mdy_date)),
-#     Field("date_submitted", "date", requires=mdy_date),
-
-#     )
+db.define_table('WSR',
+    doc_stamp,
+    Field('warehouse', 'reference warehouse'),
+    Field('received_from', 'string')
+    )

@@ -7,3 +7,10 @@
     <div class="col-lg-1">{{=form.custom.submit}}</div>
 </div>
 {{=form.custom.end}}
+
+<script>
+    var f = $("#form_group_add_id");
+    $(f).submit(function(){
+        ajax('{{=URL('default', 'user_group_new')}}', ['group_id'], )
+    });
+</script>

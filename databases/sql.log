@@ -147,3 +147,33 @@ success!
 timestamp: 2023-04-30T14:46:39.247359
 ALTER TABLE "auth_group" ADD "ranks" INTEGER;
 success!
+timestamp: 2023-05-04T13:06:14.209209
+CREATE TABLE "warehouse"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "warehouse_name" CHAR(80) UNIQUE,
+    "warehouse_code" CHAR(20) UNIQUE,
+    "branch_id" INTEGER REFERENCES "branch" ("id") ON DELETE RESTRICT  
+);
+success!
+timestamp: 2023-05-04T13:06:14.219718
+CREATE TABLE "container"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "container_name" CHAR(20) UNIQUE,
+    "container_shortname" CHAR(20) UNIQUE,
+    "weight" DOUBLE
+);
+success!
+timestamp: 2023-05-04T13:06:14.224702
+CREATE TABLE "commodity"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "commodity_name" CHAR(80) UNIQUE,
+    "is_cereal" CHAR(1)
+);
+success!
+timestamp: 2023-05-04T13:06:14.234198
+CREATE TABLE "variety"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "variety_name" CHAR(20) UNIQUE,
+    "commodity_id" INTEGER REFERENCES "commodity" ("id") ON DELETE RESTRICT  
+);
+success!

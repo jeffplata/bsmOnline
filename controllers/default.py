@@ -72,12 +72,17 @@ def user_group():
         redirect(URL('user_group', user_signature=True))
     
     user = db(db.auth_user.id==session.selected_user).select().first()
+    curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
+        join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
+        orderby=db.auth_group.ranks
+        ).first()['auth_group.ranks']
+
     def can_delete_group(row):
         admin_group_id = auth.id_group('admin')
-        return not (row.group_id==admin_group_id and user.email=='admin@email.com')
-    # def ondelete(table, record_id):
-    #     db(db[table]['id']==record_id).delete()
-    #     redirect(URL('user_group', user_signature=True))
+        curr_group_rank = db(db.auth_group.id==row.group_id).select().first()['ranks']
+        dont_delete = (curr_group_rank==curr_user_highest_rank and user.email==auth.user.email) or\
+                      (row.group_id==admin_group_id and user.email=='admin@email.com')
+        return not dont_delete
 
     _link = [ dict(header='', body=lambda r: A('Delete', _class1='button btn btn-default btn-secondary', 
             _href=URL('default','user_group', args=['delete', 'auth_membership', r.id], user_signature=True), cid=request.cid )
@@ -88,28 +93,27 @@ def user_group():
     grid = SQLFORM.grid(query, fields=[db.auth_membership.group_id], 
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
         links=_link,
-        # ondelete=ondelete
         )
 
-    curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
-        join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
-        orderby=db.auth_group.ranks
-        ).first()['auth_group.ranks']
+    # curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
+    #     join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
+    #     orderby=db.auth_group.ranks
+    #     ).first()['auth_group.ranks']
     user_groups = db(db.auth_membership.user_id==session.selected_user).select()
     ug = [g.group_id for g in user_groups]
     group_options = db(~db.auth_group.id.belongs(ug) & (db.auth_group.ranks>=curr_user_highest_rank))
 
     db.auth_membership.user_id.default = session.selected_user
     db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
-    form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add')
-
-    if form.process(dbio=False).accepted:
-        gid = form.vars['group_id']
-        fv = {'group_id':gid, 'user_id':session.selected_user}
-        db.auth_membership.insert(**fv)
-        redirect(URL('user_group', user_signature=True))
+    form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add', _id='form_group_add_id')
 
     return dict(grid=grid, form=form)
+
+def user_group_new():
+    group_id = request.vars['group_id']
+    fv = {'group_id':group_id, 'user_id':session.selected_user}
+    db.auth_membership.insert(**fv)
+    redirect(URL('user_group', user_signature=True))
 
 
 @auth.requires(auth.has_permission('manage', 'auth_user'))
