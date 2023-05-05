@@ -62,6 +62,8 @@ def user_manage():
             grid.update_form.element('#auth_user_region__row')['_hidden'] = 'hidden'
             grid.update_form.element('#auth_user_branch__row')['_hidden'] = 'hidden'
         session.selected_user = int(request.args(2))
+    elif grid.view_form:
+
     return dict(grid=grid, title=title)
 
 
@@ -95,10 +97,6 @@ def user_group():
         links=_link,
         )
 
-    # curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
-    #     join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
-    #     orderby=db.auth_group.ranks
-    #     ).first()['auth_group.ranks']
     user_groups = db(db.auth_membership.user_id==session.selected_user).select()
     ug = [g.group_id for g in user_groups]
     group_options = db(~db.auth_group.id.belongs(ug) & (db.auth_group.ranks>=curr_user_highest_rank))
@@ -113,6 +111,7 @@ def user_group_new():
     group_id = request.vars['group_id']
     fv = {'group_id':group_id, 'user_id':session.selected_user}
     db.auth_membership.insert(**fv)
+    force_read = db(db.auth_membership).select().first()
     redirect(URL('user_group', user_signature=True))
 
 
@@ -128,8 +127,8 @@ def group_manage():
         BUTTON('Down', _id='down'), SPAN(' '),
         BUTTON('Top', _id='top'), SPAN(' '),
         BUTTON('Bottom', _id='bottom'),
-        BR(),
-        DIV(_id='target')
+        # BR(),
+        # DIV(_id='target')
         )
     return dict(title=title, grid=grid, links=links if auth.has_membership('admin') else None)
 

@@ -97,6 +97,16 @@ db.define_table('variety',
 db.variety.variety_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.variety.variety_name)]
 
 
+db.define_table('item',
+    Field('item_name', 'string', length=80, unique=True),
+    Field('variety_id', db.variety, label='Variety'),
+    Field('container_id', db.container, label='Container'),
+    Field('selling_price', 'decimal(15,2)'),
+    format='%(item_name)s')
+
+# db.item.item_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.item.item_name)]
+
+
 doc_stamp = db.Table(db, 'doc_stamp',
     Field('doc_date', 'date', default=request.now, requires=IS_DATE(format='%m/%d/%Y') ),
     Field('doc_number', 'string', length=40, unique=True))
@@ -105,5 +115,6 @@ doc_stamp = db.Table(db, 'doc_stamp',
 db.define_table('WSR',
     doc_stamp,
     Field('warehouse', 'reference warehouse'),
-    Field('received_from', 'string')
+    Field('received_from', 'string', length=80),
+    # Field(),
     )

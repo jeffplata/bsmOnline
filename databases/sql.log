@@ -177,3 +177,22 @@ CREATE TABLE "variety"(
     "commodity_id" INTEGER REFERENCES "commodity" ("id") ON DELETE RESTRICT  
 );
 success!
+timestamp: 2023-05-05T07:59:38.517859
+CREATE TABLE "WSR"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "doc_date" DATE,
+    "doc_number" CHAR(40) UNIQUE,
+    "warehouse" INTEGER REFERENCES "warehouse" ("id") ON DELETE CASCADE  ,
+    "received_from" CHAR(512)
+);
+success!
+timestamp: 2023-05-05T16:16:57.323021
+CREATE TABLE "item"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "item_name" CHAR(80) UNIQUE,
+    "variety_id" INTEGER REFERENCES "variety" ("id") ON DELETE CASCADE  ,
+    "container_id" INTEGER REFERENCES "container" ("id") ON DELETE CASCADE  ,
+    "selling_price" DOUBLE
+);
+success!
+success!
