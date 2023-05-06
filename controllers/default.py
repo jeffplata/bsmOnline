@@ -63,6 +63,7 @@ def user_manage():
             grid.update_form.element('#auth_user_branch__row')['_hidden'] = 'hidden'
         session.selected_user = int(request.args(2))
     elif grid.view_form:
+        
 
     return dict(grid=grid, title=title)
 
