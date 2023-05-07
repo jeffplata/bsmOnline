@@ -196,3 +196,8 @@ CREATE TABLE "item"(
 );
 success!
 success!
+timestamp: 2023-05-07T23:04:02.353762
+ALTER TABLE "WSR" ADD "reference_doc" CHAR(20);
+timestamp: 2023-05-07T23:04:02.366267
+ALTER TABLE "WSR" ADD "item" INTEGER REFERENCES "item" ("id") ON DELETE CASCADE  ;
+success!

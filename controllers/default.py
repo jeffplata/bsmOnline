@@ -63,9 +63,13 @@ def user_manage():
             grid.update_form.element('#auth_user_branch__row')['_hidden'] = 'hidden'
         session.selected_user = int(request.args(2))
     elif grid.view_form:
-        groups_query = db.auth_membership.user_id == session.selected_user
-        d = DIV(LABEL('Groups', _class='readonly form-control-label col-sm-3'), DIV('1 2 3', _class='col-sm-9'),
-                _class='form-group row')
+        groups = db(db.auth_membership.user_id == int(request.args(2))).select(
+            join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
+            orderby=db.auth_membership.id)
+        d = DIV(LABEL('Groups', _class='readonly form-control-label col-sm-3'), 
+                DIV([g.auth_group.role+'\n' for g in groups], _class='col-sm-9'),
+                _class='form-group row',
+                _style='white-space:pre; border-top: 1px solid #eaeaea')
         grid.view_form[0].append(d)
 
     return dict(grid=grid, title=title)

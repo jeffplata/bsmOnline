@@ -116,5 +116,7 @@ db.define_table('WSR',
     doc_stamp,
     Field('warehouse', 'reference warehouse'),
     Field('received_from', 'string', length=80),
-    # Field(),
+    Field('reference_doc', 'string', length=20),
+    Field('item', 'reference item'),
+    
     )
