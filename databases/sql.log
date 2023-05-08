@@ -201,3 +201,127 @@ ALTER TABLE "WSR" ADD "reference_doc" CHAR(20);
 timestamp: 2023-05-07T23:04:02.366267
 ALTER TABLE "WSR" ADD "item" INTEGER REFERENCES "item" ("id") ON DELETE CASCADE  ;
 success!
+timestamp: 2023-05-08T08:40:32.210216
+ALTER TABLE "commodity" ADD "is_active" CHAR(1);
+timestamp: 2023-05-08T08:40:32.225935
+ALTER TABLE "commodity" ADD "created_on" TIMESTAMP;
+timestamp: 2023-05-08T08:40:32.234440
+ALTER TABLE "commodity" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T08:40:32.234440
+ALTER TABLE "commodity" ADD "modified_on" TIMESTAMP;
+timestamp: 2023-05-08T08:40:32.241964
+ALTER TABLE "commodity" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+success!
+timestamp: 2023-05-08T10:18:12.251841
+ALTER TABLE "container" ADD "is_active" CHAR(1);
+timestamp: 2023-05-08T10:18:12.251841
+ALTER TABLE "container" ADD "created_on" TIMESTAMP;
+timestamp: 2023-05-08T10:18:12.251841
+ALTER TABLE "container" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T10:18:12.267461
+ALTER TABLE "container" ADD "modified_on" TIMESTAMP;
+timestamp: 2023-05-08T10:18:12.267461
+ALTER TABLE "container" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+success!
+timestamp: 2023-05-08T10:18:47.901717
+ALTER TABLE "variety" ADD "is_active" CHAR(1);
+timestamp: 2023-05-08T10:18:47.901717
+ALTER TABLE "variety" ADD "created_on" TIMESTAMP;
+timestamp: 2023-05-08T10:18:47.901717
+ALTER TABLE "variety" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T10:18:47.917314
+ALTER TABLE "variety" ADD "modified_on" TIMESTAMP;
+timestamp: 2023-05-08T10:18:47.917314
+ALTER TABLE "variety" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+success!
+timestamp: 2023-05-08T10:18:47.933326
+ALTER TABLE "item" ADD "is_active" CHAR(1);
+timestamp: 2023-05-08T10:18:47.933326
+ALTER TABLE "item" ADD "created_on" TIMESTAMP;
+timestamp: 2023-05-08T10:18:47.933326
+ALTER TABLE "item" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T10:18:47.948951
+ALTER TABLE "item" ADD "modified_on" TIMESTAMP;
+timestamp: 2023-05-08T10:18:47.948951
+ALTER TABLE "item" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+success!
+timestamp: 2023-05-08T10:19:10.456382
+ALTER TABLE "WSR" ADD "is_active" CHAR(1);
+timestamp: 2023-05-08T10:19:10.456382
+ALTER TABLE "WSR" ADD "created_on" TIMESTAMP;
+timestamp: 2023-05-08T10:19:10.472004
+ALTER TABLE "WSR" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T10:19:10.472004
+ALTER TABLE "WSR" ADD "modified_on" TIMESTAMP;
+timestamp: 2023-05-08T10:19:10.472004
+ALTER TABLE "WSR" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
+success!
+success!
+timestamp: 2023-05-08T16:15:15.426071
+CREATE TABLE "activity"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "activity_name" CHAR(80) UNIQUE,
+    "applies_to" CHAR(20),
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
+);
+success!
+timestamp: 2023-05-08T16:15:15.441692
+ALTER TABLE "WSR" ADD "variety" INTEGER REFERENCES "variety" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T16:15:15.441692
+ALTER TABLE "WSR" ADD "container" INTEGER REFERENCES "container" ("id") ON DELETE CASCADE  ;
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2023-05-08T17:55:40.034850
+CREATE TABLE "stock_condition"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "condition_name" CHAR(50) UNIQUE,
+    "short_name" CHAR(5) UNIQUE
+);
+success!
+timestamp: 2023-05-08T17:59:16.260265
+ALTER TABLE "WSR" ADD "ai_no" CHAR(20);
+timestamp: 2023-05-08T17:59:16.260265
+ALTER TABLE "WSR" ADD "or_no" CHAR(20);
+timestamp: 2023-05-08T17:59:16.260265
+ALTER TABLE "WSR" ADD "activity" INTEGER REFERENCES "activity" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T17:59:16.275876
+ALTER TABLE "WSR" ADD "age" CHAR(20);
+timestamp: 2023-05-08T17:59:16.278883
+ALTER TABLE "WSR" ADD "stock_condition" INTEGER REFERENCES "stock_condition" ("id") ON DELETE CASCADE  ;
+timestamp: 2023-05-08T17:59:16.278883
+ALTER TABLE "WSR" ADD "mc" DOUBLE;
+timestamp: 2023-05-08T17:59:16.278883
+ALTER TABLE "WSR" ADD "purity" DOUBLE;
+timestamp: 2023-05-08T17:59:16.291918
+ALTER TABLE "WSR" ADD "bags" INTEGER;
+timestamp: 2023-05-08T17:59:16.291918
+ALTER TABLE "WSR" ADD "gross_weight" DOUBLE;
+timestamp: 2023-05-08T17:59:16.291918
+ALTER TABLE "WSR" ADD "net_weight" DOUBLE;
+success!
+success!

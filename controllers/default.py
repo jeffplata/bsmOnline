@@ -11,18 +11,6 @@ def index():
     return locals()
 
 
-@auth.requires_membership('admin') 
-def library(table, title=None, action=None):
-    query = db[table]
-    if not title:
-        title = table.capitalize()
-    if action in ['view', 'edit', 'new']:
-        title = f"{action.capitalize()} {title.lower()}"
-    grid = SQLFORM.grid(query, deletable=False, editable=True, csv=False)
-    # return dict(grid=grid, title=title)
-    return (grid, title)
-
-
 @auth.requires(auth.has_permission('manage', 'auth_user'))
 def user_manage():
     title = 'Users'

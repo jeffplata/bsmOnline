@@ -12,6 +12,8 @@
 'row': ['rows'],
 'shop': ['shops'],
 'this': ['these'],
+'title': ['titles'],
+'title!': ['title!s'],
 'was': ['were'],
 'woman': ['women'],
 }
