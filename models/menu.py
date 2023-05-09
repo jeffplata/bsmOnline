@@ -13,7 +13,7 @@ m = ('Users', False, None, [])
 
 if auth.has_permission('manage', 'auth_user', 0):
     m[3].append(('Users', False, URL('default', 'user_manage.load', vars={'table':'auth_user'}, user_signature=True)))
-    m[3].append(('Groups', False, URL('default', 'group_manage.load', user_signature=True)))
+    m[3].append(('Groups and Permissions', False, URL('default', 'group_manage.load', user_signature=True)))
 
 l = ('Library', False, None, [])
 
@@ -26,15 +26,14 @@ if auth.has_permission('manage', 'library'):
 
 d = ('Documents', False, None, [])
 
-# wh docs
-# bsm docs
-# cashier docs
-
-wh docs:
-
-
 if m[3]:
     response.menu += [m]
 
 if l[3]:
     response.menu += [l]
+
+# wh docs: wsi wsr wts
+# bsm: ai aap
+# sales: or pr
+# objects = 'users,library,wh docs,bsm docs,sales docs'
+# actions = 'view,add,edit,delete'

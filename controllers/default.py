@@ -113,20 +113,28 @@ def user_group_new():
 
 @auth.requires(auth.has_permission('manage', 'auth_user'))
 def group_manage():
+    btn_class = 'button btn btn-secondary'
     title = 'Groups'
     query = db['auth_group']
+    links = [ dict(header='', body=lambda r: A('Permissions', _class='button btn btn-secondary', 
+            _href=URL('default','group_permission', args=[r.id], user_signature=True), cid=request.cid )
+            if auth.has_membership('admin') else '' )
+            ]
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
-        formname='group_grid', links=None)
-    links = DIV(SPAN('Move item: '), 
+        formname='group_grid', links=links)
+    arrange_links = DIV(SPAN('Move item: '), 
         BUTTON('Up', _id='up'), SPAN(' '),
         BUTTON('Down', _id='down'), SPAN(' '),
         BUTTON('Top', _id='top'), SPAN(' '),
         BUTTON('Bottom', _id='bottom'),
-        # BR(),
-        # DIV(_id='target')
-        )
-    return dict(title=title, grid=grid, links=links if auth.has_membership('admin') else None)
+        ) if auth.has_membership('admin') else None
+    return dict(title=title, grid=grid, links=arrange_links )
+
+
+def group_permission():
+
+    return locals()
 
 
 def group_rank_change():

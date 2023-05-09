@@ -12,6 +12,5 @@
     var f = $("#form_group_add_id");
     $(f).submit(function(){
         ajax('{{=URL('default', 'user_group_new')}}', ['group_id'], );
-        // web2py_component('{{=URL('default','user_group.load')}}', 'user_group_div');
     });
 </script>
