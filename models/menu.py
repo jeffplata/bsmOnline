@@ -10,13 +10,13 @@ response.menu = [
 
 m = ('Users', False, None, [])
 
-if adminuser or auth.has_permission('manage', 'auth_user', 0):
+if adminuser or auth.has_permission('view', 'user'):
     m[3].append(('Users', False, URL('default', 'user_manage.load', vars={'table':'auth_user'}, user_signature=True)))
     m[3].append(('Groups and Permissions', False, URL('default', 'group_manage.load', user_signature=True)))
 
 l = ('Library', False, None, [])
 
-if auth.has_permission('manage', 'library'):
+if adminuser or auth.has_permission('view', 'library'):
     l[3].append(('Warehouses', False, URL('library', 'warehouse', user_signature=True)))
     l[3].append(('Containers', False, URL('library', 'container', user_signature=True)))
     l[3].append(('Commodities', False, URL('library', 'commodity', user_signature=True)))

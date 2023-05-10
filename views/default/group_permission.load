@@ -5,16 +5,13 @@
     $('input[id^="object_"]').on('change', function(e){
        n = $(this).attr('id').replace('object_','');
        x = $(this).is(':checked');
-       $("input[name$='"+n+"']").attr('checked',x);
+       $("input[name$='|"+n+"']").prop('checked',x);
     });
 
     $("input[name*='|']").on('change', function(e){
         x = $(this).is(':checked');
-        alert($(this).attr('name'));
         n = 'object_' + $(this).attr('name').split('|')[1];
-        // alert(n);
-        $("input[id='"+n+"']").attr('checked',false);
-        
+        $("input[id='"+n+"']").prop('checked',false);
     });
     // $(f).submit(function(){
     //     ajax('{{=URL('default', 'group_permission_change')}}', [], );

@@ -33,16 +33,27 @@ def next_month(date, force_day=0):
     return next_month
 
 
-@auth.requires_membership('admin') 
-def library(query, title, deletable=True, action=None):
+# @auth.requires(adminuser or auth.has_permission('view','library'))
+# def library(query, title, deletable=True, action=None):
+#     t1 = title.split('|')[0]
+#     t2 = title.split('|')[1] if '|' in title else t1
+#     if action in ['view', 'edit', 'new']:
+#         title = f"{action.capitalize()} {t1.lower()}"
+#     else:
+#         title = t2.capitalize()
+#     grid = SQLFORM.grid(query, deletable=deletable, editable=True, csv=False)
+#     # return dict(grid=grid, title=title)
+#     return (grid, title)
+
+@auth.requires(adminuser or auth.has_permission('view','library'))
+def library(query, title, action=None, **kwargs):
     t1 = title.split('|')[0]
     t2 = title.split('|')[1] if '|' in title else t1
     if action in ['view', 'edit', 'new']:
         title = f"{action.capitalize()} {t1.lower()}"
     else:
         title = t2.capitalize()
-    grid = SQLFORM.grid(query, deletable=deletable, editable=True, csv=False)
-    # return dict(grid=grid, title=title)
+    grid = SQLFORM.grid(query, csv=False, **kwargs)
     return (grid, title)
 
 

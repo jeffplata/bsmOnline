@@ -10,8 +10,12 @@
 def index():
     return locals()
 
+can_view_user = auth.has_permission('view', 'user') or adminuser
+can_add_user = auth.has_permission('add', 'user') or adminuser
+can_edit_user = auth.has_permission('edit', 'user') or adminuser
+can_delete_user = auth.has_permission('delete', 'user') or adminuser
 
-@auth.requires(adminuser or auth.has_permission('manage', 'auth_user'))
+@auth.requires(adminuser or can_view_user)
 def user_manage():
     title = 'Users'
     if request.args(0) in ['view', 'edit', 'new']:
@@ -41,7 +45,10 @@ def user_manage():
 
     grid = SQLFORM.grid(query, 
         fields=[db.auth_user[f] for f in fields.split(',')],
-        deletable=False, csv=False, formname='user_grid')
+        create=can_add_user, 
+        editable=can_edit_user,
+        deletable=lambda r: (r.email != 'admin@email.com') and can_delete_user,
+        csv=False, formname='user_grid')
     # grid, title = library(db['auth_user'], 'User', request.args(0))
     group_grid = None
     if grid.update_form:
@@ -63,7 +70,7 @@ def user_manage():
     return dict(grid=grid, title=title)
 
 
-@auth.requires(adminuser or auth.has_permission('manage', 'auth_user'))
+@auth.requires(adminuser or can_view_user)
 def user_group():
     if request.args(0)=='delete':
         db(db.auth_membership.id==request.args(2)).delete()
@@ -111,7 +118,7 @@ def user_group_new():
     redirect(URL('user_group', user_signature=True))
 
 
-@auth.requires(adminuser or auth.has_permission('manage', 'auth_user'))
+@auth.requires(adminuser or can_view_user)
 def group_manage():
     btn_class = 'button btn btn-secondary'
     title = 'Groups'
@@ -121,14 +128,17 @@ def group_manage():
             if adminuser else '' )
             ]
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
-        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
+        create=can_add_user, 
+        editable=can_edit_user,
+        deletable=lambda r: (r.role != 'admin') and can_delete_user,
+        details=False, searchable=False, csv=False,
         formname='group_grid', links=links)
     arrange_links = DIV(SPAN('Move item: '), 
         BUTTON('Up', _id='up'), SPAN(' '),
         BUTTON('Down', _id='down'), SPAN(' '),
         BUTTON('Top', _id='top'), SPAN(' '),
         BUTTON('Bottom', _id='bottom'),
-        ) if auth.has_membership('admin') else None
+        ) if adminuser else None
     return dict(title=title, grid=grid, links=arrange_links )
 
 
@@ -173,29 +183,31 @@ def group_permission():
                 t,
                 DIV(INPUT(_type='submit', _value='Save changes', _class='btn btn-primary'),
                     _class='float-right'),
-                _action='group_permission_change.load',
+                _action='group_permission_change.load/'+request.args(0),
                 _id='form1',
                 # _method='POST',
                 ),
             _class='col-md-6'
             )
 
-    return dict(table=t, group=None, button=_btn_back, disp=d)
+    return dict(disp=d)
 
 
 def group_permission_change():
+    group_id = request.args(0)
     # session.flash = 'Permission changes saved.'
-    # print(request.post_vars.keys())
     if 'current_permission' not in session:
         session.flash = 'Page expired. No changes saved.'
     else:
-        print('=====')
         selected = list(request.post_vars.keys())
-        for v in session.current_permission:
-            if not v in selected: print(v,' is deleted.')
-            else: print(v, ' is not changed.')
         for v in selected:
-            if not v in session.current_permission: print(v, ' is inserted.')
+            if not v in session.current_permission:
+                name_object = list(v.split('|'))
+                auth.add_permission(group_id, name_object[0], name_object[1], 0)
+        for v in session.current_permission:
+            if not v in selected: 
+                name_object = list(v.split('|'))
+                auth.del_permission(group_id, name_object[0], name_object[1], 0)
     redirect(URL('group_manage', user_signature=True))
 
 
