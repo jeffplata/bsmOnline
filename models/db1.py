@@ -4,6 +4,7 @@ mdy = '%m/%d/%Y'
 mdy_date = IS_DATE(format='%m/%d/%Y')
 moneytize = lambda v: '{:,.2f}'.format(v)
 max_bags = 999999999
+adminuser = auth.has_membership('admin')
 
 
 def is_float(s):

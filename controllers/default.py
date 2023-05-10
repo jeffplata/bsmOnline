@@ -11,7 +11,7 @@ def index():
     return locals()
 
 
-@auth.requires(auth.has_permission('manage', 'auth_user'))
+@auth.requires(adminuser or auth.has_permission('manage', 'auth_user'))
 def user_manage():
     title = 'Users'
     if request.args(0) in ['view', 'edit', 'new']:
@@ -63,7 +63,7 @@ def user_manage():
     return dict(grid=grid, title=title)
 
 
-@auth.requires(auth.has_permission('manage', 'auth_user'))
+@auth.requires(adminuser or auth.has_permission('manage', 'auth_user'))
 def user_group():
     if request.args(0)=='delete':
         db(db.auth_membership.id==request.args(2)).delete()
@@ -111,14 +111,14 @@ def user_group_new():
     redirect(URL('user_group', user_signature=True))
 
 
-@auth.requires(auth.has_permission('manage', 'auth_user'))
+@auth.requires(adminuser or auth.has_permission('manage', 'auth_user'))
 def group_manage():
     btn_class = 'button btn btn-secondary'
     title = 'Groups'
     query = db['auth_group']
     links = [ dict(header='', body=lambda r: A('Permissions', _class='button btn btn-secondary', 
             _href=URL('default','group_permission', args=[r.id], user_signature=True), cid=request.cid )
-            if auth.has_membership('admin') else '' )
+            if adminuser else '' )
             ]
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
@@ -134,7 +134,69 @@ def group_manage():
 
 def group_permission():
 
-    return locals()
+    # wh docs: wsi wsr wts
+    # bsm: ai aap
+    # sales: or pr
+
+    group = db.auth_group(request.args(0))
+    permissions = db(db.auth_permission.group_id==group.id).select()
+    current_permission = [i.name+'|'+i.table_name for i in permissions]
+    session.current_permission = current_permission  # <===
+    
+    actions = ['view','add','edit','delete']
+    objects = ['user','library','wh docs','bsm docs','sales docs']
+
+    checked = [
+        ['checked' if actions[0]+'|'+objects[i] in current_permission else None for i, v in enumerate(objects)],
+        ['checked' if actions[1]+'|'+objects[i] in current_permission else None for i, v in enumerate(objects)],
+        ['checked' if actions[2]+'|'+objects[i] in current_permission else None for i, v in enumerate(objects)],
+        ['checked' if actions[3]+'|'+objects[i] in current_permission else None for i, v in enumerate(objects)],
+        ]
+
+    t = TABLE(
+            TR([TH(INPUT(_type='checkbox', _id='object_'+i.replace(' ', ' ')),' '+i) for i in objects]),
+            TR([TD((INPUT(_type='checkbox', _name=actions[0]+'|'+objects[i], _checked=checked[0][i])), ' '+actions[0]) for i, v in enumerate(objects)]),
+            TR([TD((INPUT(_type='checkbox', _name=actions[1]+'|'+objects[i], _checked=checked[1][i])), ' '+actions[1]) for i, v in enumerate(objects)]),
+            TR([TD((INPUT(_type='checkbox', _name=actions[2]+'|'+objects[i], _checked=checked[2][i])), ' '+actions[2]) for i, v in enumerate(objects)]),
+            TR([TD((INPUT(_type='checkbox', _name=actions[3]+'|'+objects[i], _checked=checked[3][i])), ' '+actions[3]) for i, v in enumerate(objects)]),
+            _class='table table-striped'
+            )
+
+    _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
+        ' Back', _href=URL('group_manage'), 
+        cid=request.cid, _class='btn btn-secondary')
+
+    d = DIV(
+            _btn_back,
+            H5("Group '", STRONG(group.role), "' permission"),
+            FORM(
+                t,
+                DIV(INPUT(_type='submit', _value='Save changes', _class='btn btn-primary'),
+                    _class='float-right'),
+                _action='group_permission_change.load',
+                _id='form1',
+                # _method='POST',
+                ),
+            _class='col-md-6'
+            )
+
+    return dict(table=t, group=None, button=_btn_back, disp=d)
+
+
+def group_permission_change():
+    # session.flash = 'Permission changes saved.'
+    # print(request.post_vars.keys())
+    if 'current_permission' not in session:
+        session.flash = 'Page expired. No changes saved.'
+    else:
+        print('=====')
+        selected = list(request.post_vars.keys())
+        for v in session.current_permission:
+            if not v in selected: print(v,' is deleted.')
+            else: print(v, ' is not changed.')
+        for v in selected:
+            if not v in session.current_permission: print(v, ' is inserted.')
+    redirect(URL('group_manage', user_signature=True))
 
 
 def group_rank_change():
