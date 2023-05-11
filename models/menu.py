@@ -17,11 +17,13 @@ if adminuser or auth.has_permission('view', 'user'):
 l = ('Library', False, None, [])
 
 if adminuser or auth.has_permission('view', 'library'):
+    l[3].append(('Regions', False, URL('library', 'region', user_signature=True)))
+    l[3].append(('Branches', False, URL('library', 'branch', user_signature=True)))
     l[3].append(('Warehouses', False, URL('library', 'warehouse', user_signature=True)))
+    l[3].append(('Activities', False, URL('library', 'activity', user_signature=True)))
     l[3].append(('Containers', False, URL('library', 'container', user_signature=True)))
     l[3].append(('Commodities', False, URL('library', 'commodity', user_signature=True)))
     l[3].append(('Varieties', False, URL('library', 'variety', user_signature=True)))
-    l[3].append(('Activities', False, URL('library', 'activity', user_signature=True)))
 
 d = ('Documents', False, None, [])
 

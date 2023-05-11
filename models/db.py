@@ -93,40 +93,6 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 # -------------------------------------------------------------------------
 
 
-db.define_table("region",
-    Field("region_name", "string", requires=IS_NOT_EMPTY(), unique=True),
-    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
-    Field("seq", "integer", readable=False, writable=False),
-    format="%(region_name)s"
-    )
-
-def _region_after_insert(f, i):
-    if f:
-        db(db.region.id==i).update(seq=i)
-
-db.region._after_insert = [_region_after_insert]
-
-# db.region.insert(region_name='Region 5 - Bicol', short_name='Bicol')
-# db.region.insert(region_name='Region 6 - Western Visayas', short_name='WVR')
-# db.region.insert(region_name='Region 7 - Central Visayas', short_name='CViR')
-# db.region.insert(region_name='Region 9 - Western Mindanao', short_name='WMR')
-# db.region.insert(region_name='Region 10 - Northeastern Mindanao', short_name='NEMR')
-# db.region.insert(region_name='Region 11 - Southeastern Mindanao', short_name='SEMR')
-# db.region.insert(region_name='Region 12 - Southern Mindanao', short_name='SMR')
-# db.region.insert(region_name='National Capital Region', short_name='NCR')
-# db.region.insert(region_name='ARMM', short_name='ARMM')
-# db.region.insert(region_name='CARAGA', short_name='CARAGA')
-
-db.define_table("branch",
-    Field("branch_name", "string", requires=IS_NOT_EMPTY(), unique=True),
-    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
-    Field("region_id", "reference region", label="Region"),
-    Field("seq", "integer", readable=False, writable=False),
-    format="%(branch_name)s"
-    )
-
-db.branch._after_insert = [lambda f, i: db(db.branch.id==i).update(seq=i)]
-
 # auth.settings.extra_fields['auth_user'] = [
 #     Field("middle_name", length=128, default="", map_none=''),
 #     Field("region", "reference region", map_none=''),
@@ -143,8 +109,8 @@ db.define_table(
     Field('email', length=128, default='', unique=True), # required
     Field('password', 'password', length=512,            # required
           readable=False, writable=False, label='Password'),
-    Field("region", "reference region", map_none=''),
-    Field("branch", "reference branch", map_none=''),
+    Field("region", "integer", map_none=''),
+    Field("branch", "integer", map_none=''),
 
     Field('registration_key', length=512,                # required
           writable=False, readable=False, default=''),
@@ -158,7 +124,7 @@ db.define_table(
 ## do not forget validators
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
-custom_auth_table.last_name.requires =   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
+# custom_auth_table.last_name.requires =   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
 # custom_auth_table.password.requires = [IS_STRONG(), CRYPT()]
 custom_auth_table.password.requires = [CRYPT()]
 custom_auth_table.email.requires = [
@@ -169,13 +135,116 @@ auth.settings.table_user = custom_auth_table # tell auth to use custom_auth_tabl
 
 # customize auth_group
 auth.settings.extra_fields['auth_group'] = [
-    Field("ranks", "integer", readable=False, writable=False)
+    Field("ranks", "integer", readable=False, writable=False),
+    auth.signature
     ]
 
 
 auth.define_tables(username=False, signature=False)
 
 db.auth_group._after_insert = [lambda f, i: db(db.auth_group.id==i).update(ranks=i)]
+
+# set up auth_membership
+db.auth_membership.user_id.label = 'User'
+db.auth_membership.group_id.label = 'Group'
+
+# =======================================================
+# Region and Branch
+
+db.define_table("region",
+    Field("region_name", "string", requires=IS_NOT_EMPTY(), unique=True),
+    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
+    Field("seq", "integer", readable=False, writable=False),
+    auth.signature,
+    format="%(region_name)s"
+    )
+def _region_after_insert(f, i):
+    if f: db(db.region.id==i).update(seq=i)
+db.region._after_insert = [_region_after_insert]
+
+
+db.define_table("branch",
+    Field("branch_name", "string", requires=IS_NOT_EMPTY(), unique=True),
+    Field("short_name", "string", length=20, requires=IS_NOT_EMPTY(), unique=True),
+    Field("region_id", "reference region", label="Region", ondelete='RESTRICT'),
+    Field("seq", "integer", readable=False, writable=False),
+    auth.signature,
+    format="%(branch_name)s"
+    )
+db.branch._after_insert = [lambda f, i: db(db.branch.id==i).update(seq=i)]
+
+# ==============
+# set auth_user validation for branch and region
+
+custom_auth_table.region.requires = IS_EMPTY_OR(IS_IN_DB(db, 'region.id', '%(region_name)s'))
+custom_auth_table.branch.requires = IS_EMPTY_OR(IS_IN_DB(db, 'branch.id', '%(branch_name)s'))
+
+# initialize users and groups
+
+if db(db.auth_user.id).count() < 1:
+    user_id = db.auth_user.validate_and_insert(email="admin@email.com", first_name="admin", last_name="admin", password="Password1")
+    user = db(db.auth_user.id==user_id).select().first()
+    auth.login_bare(user.email, user.password)
+
+    group_id = db.auth_group.insert(role="admin", description="admin group")
+    auth.add_membership(group_id, user_id)
+
+if db(db.auth_group.id).count() < 2:
+    db.auth_group.insert(role='co admin')
+    db.auth_group.insert(role='co user')
+    db.auth_group.insert(role='ro admin')
+    db.auth_group.insert(role='ro user')
+    db.auth_group.insert(role='br admin')
+    db.auth_group.insert(role='br user')
+    db.auth_group.insert(role='wh supervisor')
+    db.auth_group.insert(role='wh asssistant')
+    db.auth_group.insert(role='cashier')
+    db.auth_group.insert(role='sdo')
+    db.auth_group.insert(role='sco')
+
+# initialize regions and branches
+
+if db(db.region.id).count() < 1:
+    db.region.insert(region_name='Region 1 - Ilocos', short_name='Ilocos')
+    db.region.insert(region_name='Region 2 - Cagayan Valley', short_name='CVR')
+    db.region.insert(region_name='Region 3 - Central Luzon', short_name='CLR')
+    db.region.insert(region_name='Region 4 - Southern Tagalog', short_name='STR')
+    db.region.insert(region_name='Region 5 - Bicol', short_name='Bicol')
+    db.region.insert(region_name='Region 6 - Western Visayas', short_name='WVR')
+    db.region.insert(region_name='Region 7 - Central Visayas', short_name='CViR')
+    db.region.insert(region_name='Region 8 - Eastern Visayas Region', short_name='EVR')
+    db.region.insert(region_name='Region 9 - Western Mindanao', short_name='WMR')
+    db.region.insert(region_name='Region 10 - Northeastern Mindanao', short_name='NEMR')
+    db.region.insert(region_name='Region 11 - Southeastern Mindanao', short_name='SEMR')
+    db.region.insert(region_name='Region 12 - Southern Mindanao', short_name='SMR')
+    db.region.insert(region_name='National Capital Region', short_name='NCR')
+    db.region.insert(region_name='ARMM', short_name='ARMM')
+    db.region.insert(region_name='CARAGA', short_name='CARAGA')
+
+region2_id = db(db.region.short_name=='CVR').select().first()['id']
+region7_id = db(db.region.short_name=='CViR').select().first()['id']
+region8_id = db(db.region.short_name=='EVR').select().first()['id']
+
+if db(db.branch.id).count() < 1:
+    db.branch.insert(branch_name='Isabela Branch', short_name='ISA', region_id=region2_id)
+    db.branch.insert(branch_name='Cagayan Branch', short_name='CAG', region_id=region2_id)
+    db.branch.insert(branch_name='Nueva Vizcaya Branch', short_name='NVA', region_id=region2_id)
+    db.branch.insert(branch_name='Leyte Branch', short_name='TCN', region_id=region8_id)
+    db.branch.insert(branch_name='Samar Branch', short_name='SMR', region_id=region8_id)
+
+br_leyte_id = db(db.branch.short_name=='TCN').select().first()['id']
+br_samar_id = db(db.branch.short_name=='SMR').select().first()['id']
+# add a few users
+if db(db.auth_user.id).count() < 2:
+    db.auth_user.validate_and_insert(email='venus@email.com', first_name='Venus', last_name='Prima', password='Password1', region=region8_id, branch=br_leyte_id)
+    db.auth_user.validate_and_insert(email='cebpac@email.com', first_name='Jeff', last_name='Plata', password='Password1', region=region8_id)
+    db.auth_user.validate_and_insert(email='enidganda@email.com', first_name='Nadine', last_name='Sandino', password='Password1', region=region8_id, branch=br_leyte_id)
+    db.auth_user.validate_and_insert(email='ejconchada@email.com', first_name='Eduard Jayson', last_name='Conchada', password='Password1', region=region8_id)
+    db.auth_user.validate_and_insert(email='saldy@email.com', first_name='Salvador', last_name='Ada', password='Password1', region=region8_id, branch=br_samar_id)
+    db.auth_user.validate_and_insert(email='reco7@email.com', first_name='RECO of R7', last_name='reco 7', password='Password1', region=region7_id)
+    db.auth_user.validate_and_insert(email='reco2@email.com', first_name='RECO of R2', last_name='reco 2', password='Password1', region=region2_id)
+
+
 
 # -------------------------------------------------------------------------
 # configure email

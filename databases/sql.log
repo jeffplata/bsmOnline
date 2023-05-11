@@ -1,30 +1,39 @@
-timestamp: 2023-04-24T21:32:41.251803
+timestamp: 2023-05-11T11:45:01.764380
 CREATE TABLE "auth_user"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "first_name" CHAR(128),
     "last_name" CHAR(128),
-    "email" CHAR(512),
+    "middle_name" CHAR(128),
+    "email" CHAR(128) UNIQUE,
     "password" CHAR(512),
+    "region" INTEGER,
+    "branch" INTEGER,
     "registration_key" CHAR(512),
     "reset_password_key" CHAR(512),
     "registration_id" CHAR(512)
 );
 success!
-timestamp: 2023-04-24T21:32:41.267395
+timestamp: 2023-05-11T11:45:01.779999
 CREATE TABLE "auth_group"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "role" CHAR(512),
-    "description" TEXT
+    "description" TEXT,
+    "ranks" INTEGER,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-04-24T21:32:41.283016
+timestamp: 2023-05-11T11:45:01.779999
 CREATE TABLE "auth_membership"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
     "group_id" INTEGER REFERENCES "auth_group" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-04-24T21:32:41.283016
+timestamp: 2023-05-11T11:45:01.779999
 CREATE TABLE "auth_permission"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "group_id" INTEGER REFERENCES "auth_group" ("id") ON DELETE CASCADE  ,
@@ -33,7 +42,7 @@ CREATE TABLE "auth_permission"(
     "record_id" INTEGER
 );
 success!
-timestamp: 2023-04-24T21:32:41.283016
+timestamp: 2023-05-11T11:45:01.795508
 CREATE TABLE "auth_event"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "time_stamp" TIMESTAMP,
@@ -43,7 +52,7 @@ CREATE TABLE "auth_event"(
     "description" TEXT
 );
 success!
-timestamp: 2023-04-24T21:32:41.300646
+timestamp: 2023-05-11T11:45:01.795508
 CREATE TABLE "auth_cas"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
@@ -53,211 +62,111 @@ CREATE TABLE "auth_cas"(
     "renew" CHAR(1)
 );
 success!
-timestamp: 2023-04-24T21:57:53.485914
-CREATE TABLE "service_payment_type"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "name" CHAR(512)
-);
-success!
-timestamp: 2023-04-24T21:57:53.501540
-CREATE TABLE "service"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "name" CHAR(512),
-    "description" CHAR(512),
-    "interest_rate" DOUBLE,
-    "surcharge_rate" DOUBLE,
-    "service_fee" DOUBLE,
-    "minimum_amount" DOUBLE,
-    "maximum_amount" CHAR(512),
-    "payment_type_id" INTEGER REFERENCES "service_payment_type" ("id") ON DELETE CASCADE  ,
-    "terms" CHAR(512),
-    "is_active" CHAR(1)
-);
-success!
-timestamp: 2023-04-24T21:57:53.501540
-CREATE TABLE "bank"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "bank_name" CHAR(80),
-    "short_name" CHAR(20)
-);
-success!
-timestamp: 2023-04-24T22:02:43.941258
-CREATE TABLE "region"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "region_name" CHAR(512) UNIQUE,
-    "short_name" CHAR(20),
-    "seq" INTEGER
-);
-success!
-timestamp: 2023-04-24T22:50:00.781819
-CREATE TABLE "regiont"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "region_name" CHAR(512) UNIQUE,
-    "short_name" CHAR(20),
-    "seq" INTEGER
-);
-success!
-success!
-DROP TABLE "region";
-success!
-timestamp: 2023-04-25T15:49:17.033321
+timestamp: 2023-05-11T11:45:01.795508
 CREATE TABLE "region"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "region_name" CHAR(512) UNIQUE,
     "short_name" CHAR(20) UNIQUE,
-    "seq" INTEGER
+    "seq" INTEGER,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-DROP TABLE "region";
-success!
-timestamp: 2023-04-25T15:49:24.938576
-CREATE TABLE "region"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "region_name" CHAR(512) UNIQUE,
-    "short_name" CHAR(20) UNIQUE,
-    "seq" INTEGER
-);
-success!
-timestamp: 2023-04-25T16:25:05.305086
+timestamp: 2023-05-11T11:45:01.811135
 CREATE TABLE "branch"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "branch_name" CHAR(512) UNIQUE,
     "short_name" CHAR(20) UNIQUE,
-    "region_id" INTEGER REFERENCES "region" ("id") ON DELETE CASCADE  ,
-    "seq" INTEGER
+    "region_id" INTEGER REFERENCES "region" ("id") ON DELETE RESTRICT  ,
+    "seq" INTEGER,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-04-27T09:36:59.051169
-ALTER TABLE "auth_user" ADD "middle_name" CHAR(128);
-timestamp: 2023-04-27T09:36:59.051169
-ALTER TABLE "auth_user" ADD "region" INTEGER REFERENCES "region" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-04-27T09:36:59.066791
-ALTER TABLE "auth_user" ADD "branch" INTEGER REFERENCES "branch" ("id") ON DELETE CASCADE  ;
-success!
-success!
-DROP TABLE "auth_group";
-success!
-timestamp: 2023-04-27T14:32:08.648311
-CREATE TABLE "auth_group"(
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "role" CHAR(512),
-    "description" TEXT
-);
-success!
-timestamp: 2023-04-30T14:46:39.247359
-ALTER TABLE "auth_group" ADD "ranks" INTEGER;
-success!
-timestamp: 2023-05-04T13:06:14.209209
+timestamp: 2023-05-11T11:45:01.842406
 CREATE TABLE "warehouse"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "warehouse_name" CHAR(80) UNIQUE,
     "warehouse_code" CHAR(20) UNIQUE,
-    "branch_id" INTEGER REFERENCES "branch" ("id") ON DELETE RESTRICT  
+    "region_id" INTEGER REFERENCES "region" ("id") ON DELETE RESTRICT  ,
+    "branch_id" INTEGER REFERENCES "branch" ("id") ON DELETE RESTRICT  ,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-04T13:06:14.219718
+timestamp: 2023-05-11T11:45:01.857999
 CREATE TABLE "container"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "container_name" CHAR(20) UNIQUE,
     "container_shortname" CHAR(20) UNIQUE,
-    "weight" DOUBLE
+    "weight" DOUBLE,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-04T13:06:14.224702
+timestamp: 2023-05-11T11:45:01.857999
 CREATE TABLE "commodity"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "commodity_name" CHAR(80) UNIQUE,
-    "is_cereal" CHAR(1)
+    "is_cereal" CHAR(1),
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-04T13:06:14.234198
+timestamp: 2023-05-11T11:45:01.857999
 CREATE TABLE "variety"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "variety_name" CHAR(20) UNIQUE,
-    "commodity_id" INTEGER REFERENCES "commodity" ("id") ON DELETE RESTRICT  
+    "commodity_id" INTEGER REFERENCES "commodity" ("id") ON DELETE RESTRICT  ,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-05T07:59:38.517859
-CREATE TABLE "WSR"(
+timestamp: 2023-05-11T11:45:01.873620
+CREATE TABLE "stock_condition"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "doc_date" DATE,
-    "doc_number" CHAR(40) UNIQUE,
-    "warehouse" INTEGER REFERENCES "warehouse" ("id") ON DELETE CASCADE  ,
-    "received_from" CHAR(512)
+    "condition_name" CHAR(50) UNIQUE,
+    "short_name" CHAR(5) UNIQUE,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-05T16:16:57.323021
+timestamp: 2023-05-11T11:45:01.873620
 CREATE TABLE "item"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "item_name" CHAR(80) UNIQUE,
-    "variety_id" INTEGER REFERENCES "variety" ("id") ON DELETE CASCADE  ,
-    "container_id" INTEGER REFERENCES "container" ("id") ON DELETE CASCADE  ,
-    "selling_price" DOUBLE
+    "variety_id" INTEGER REFERENCES "variety" ("id") ON DELETE RESTRICT  ,
+    "container_id" INTEGER REFERENCES "container" ("id") ON DELETE RESTRICT  ,
+    "selling_price" DOUBLE,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-success!
-timestamp: 2023-05-07T23:04:02.353762
-ALTER TABLE "WSR" ADD "reference_doc" CHAR(20);
-timestamp: 2023-05-07T23:04:02.366267
-ALTER TABLE "WSR" ADD "item" INTEGER REFERENCES "item" ("id") ON DELETE CASCADE  ;
-success!
-timestamp: 2023-05-08T08:40:32.210216
-ALTER TABLE "commodity" ADD "is_active" CHAR(1);
-timestamp: 2023-05-08T08:40:32.225935
-ALTER TABLE "commodity" ADD "created_on" TIMESTAMP;
-timestamp: 2023-05-08T08:40:32.234440
-ALTER TABLE "commodity" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T08:40:32.234440
-ALTER TABLE "commodity" ADD "modified_on" TIMESTAMP;
-timestamp: 2023-05-08T08:40:32.241964
-ALTER TABLE "commodity" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-success!
-timestamp: 2023-05-08T10:18:12.251841
-ALTER TABLE "container" ADD "is_active" CHAR(1);
-timestamp: 2023-05-08T10:18:12.251841
-ALTER TABLE "container" ADD "created_on" TIMESTAMP;
-timestamp: 2023-05-08T10:18:12.251841
-ALTER TABLE "container" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T10:18:12.267461
-ALTER TABLE "container" ADD "modified_on" TIMESTAMP;
-timestamp: 2023-05-08T10:18:12.267461
-ALTER TABLE "container" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-success!
-timestamp: 2023-05-08T10:18:47.901717
-ALTER TABLE "variety" ADD "is_active" CHAR(1);
-timestamp: 2023-05-08T10:18:47.901717
-ALTER TABLE "variety" ADD "created_on" TIMESTAMP;
-timestamp: 2023-05-08T10:18:47.901717
-ALTER TABLE "variety" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T10:18:47.917314
-ALTER TABLE "variety" ADD "modified_on" TIMESTAMP;
-timestamp: 2023-05-08T10:18:47.917314
-ALTER TABLE "variety" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-success!
-timestamp: 2023-05-08T10:18:47.933326
-ALTER TABLE "item" ADD "is_active" CHAR(1);
-timestamp: 2023-05-08T10:18:47.933326
-ALTER TABLE "item" ADD "created_on" TIMESTAMP;
-timestamp: 2023-05-08T10:18:47.933326
-ALTER TABLE "item" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T10:18:47.948951
-ALTER TABLE "item" ADD "modified_on" TIMESTAMP;
-timestamp: 2023-05-08T10:18:47.948951
-ALTER TABLE "item" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-success!
-timestamp: 2023-05-08T10:19:10.456382
-ALTER TABLE "WSR" ADD "is_active" CHAR(1);
-timestamp: 2023-05-08T10:19:10.456382
-ALTER TABLE "WSR" ADD "created_on" TIMESTAMP;
-timestamp: 2023-05-08T10:19:10.472004
-ALTER TABLE "WSR" ADD "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T10:19:10.472004
-ALTER TABLE "WSR" ADD "modified_on" TIMESTAMP;
-timestamp: 2023-05-08T10:19:10.472004
-ALTER TABLE "WSR" ADD "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ;
-success!
-success!
-timestamp: 2023-05-08T16:15:15.426071
+timestamp: 2023-05-11T11:45:01.889242
 CREATE TABLE "activity"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "activity_name" CHAR(80) UNIQUE,
@@ -269,1394 +178,29 @@ CREATE TABLE "activity"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-08T16:15:15.441692
-ALTER TABLE "WSR" ADD "variety" INTEGER REFERENCES "variety" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T16:15:15.441692
-ALTER TABLE "WSR" ADD "container" INTEGER REFERENCES "container" ("id") ON DELETE CASCADE  ;
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-timestamp: 2023-05-08T17:55:40.034850
-CREATE TABLE "stock_condition"(
+timestamp: 2023-05-11T11:45:01.895747
+CREATE TABLE "WSR"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "condition_name" CHAR(50) UNIQUE,
-    "short_name" CHAR(5) UNIQUE
+    "doc_date" DATE,
+    "doc_number" CHAR(40) UNIQUE,
+    "warehouse" INTEGER REFERENCES "warehouse" ("id") ON DELETE CASCADE  ,
+    "received_from" CHAR(80),
+    "ai_no" CHAR(20),
+    "or_no" CHAR(20),
+    "variety" INTEGER REFERENCES "variety" ("id") ON DELETE RESTRICT  ,
+    "container" INTEGER REFERENCES "container" ("id") ON DELETE RESTRICT  ,
+    "activity" INTEGER REFERENCES "activity" ("id") ON DELETE RESTRICT  ,
+    "age" CHAR(20),
+    "stock_condition" INTEGER REFERENCES "stock_condition" ("id") ON DELETE RESTRICT  ,
+    "mc" DOUBLE,
+    "purity" DOUBLE,
+    "bags" INTEGER,
+    "gross_weight" DOUBLE,
+    "net_weight" DOUBLE,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
-success!
-timestamp: 2023-05-08T17:59:16.260265
-ALTER TABLE "WSR" ADD "ai_no" CHAR(20);
-timestamp: 2023-05-08T17:59:16.260265
-ALTER TABLE "WSR" ADD "or_no" CHAR(20);
-timestamp: 2023-05-08T17:59:16.260265
-ALTER TABLE "WSR" ADD "activity" INTEGER REFERENCES "activity" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T17:59:16.275876
-ALTER TABLE "WSR" ADD "age" CHAR(20);
-timestamp: 2023-05-08T17:59:16.278883
-ALTER TABLE "WSR" ADD "stock_condition" INTEGER REFERENCES "stock_condition" ("id") ON DELETE CASCADE  ;
-timestamp: 2023-05-08T17:59:16.278883
-ALTER TABLE "WSR" ADD "mc" DOUBLE;
-timestamp: 2023-05-08T17:59:16.278883
-ALTER TABLE "WSR" ADD "purity" DOUBLE;
-timestamp: 2023-05-08T17:59:16.291918
-ALTER TABLE "WSR" ADD "bags" INTEGER;
-timestamp: 2023-05-08T17:59:16.291918
-ALTER TABLE "WSR" ADD "gross_weight" DOUBLE;
-timestamp: 2023-05-08T17:59:16.291918
-ALTER TABLE "WSR" ADD "net_weight" DOUBLE;
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
-success!
 success!

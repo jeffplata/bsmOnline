@@ -8,8 +8,20 @@
 
 can_view_library = auth.has_permission('view', 'library') or adminuser
 can_add_library = auth.has_permission('add', 'library') or adminuser
-can_edit_library = auth.has_permission('edit', 'library') or adminuser
-can_delete_library = auth.has_permission('delete', 'library') or adminuser
+# can_edit_library = auth.has_permission('edit', 'library') or adminuser
+# can_delete_library = auth.has_permission('delete', 'library') or adminuser
+
+def can_modify(r):
+    return (r.created_by==me) or\
+        (auth.user.branch and (db.auth_user(r.created_by).branch==auth.user.branch)) or\
+        ((not auth.user.branch) and auth.user.region and (db.auth_user(r.created_by).region==auth.user.region))
+
+def can_edit_library(r):
+    return adminuser or (auth.has_permission('edit', 'library') and can_modify(r))
+
+def can_delete_library(r):
+    return adminuser or (auth.has_permission('delete', 'library') and can_modify(r))
+
 
 @auth.requires(can_view_library)
 def warehouse():
@@ -31,11 +43,29 @@ def warehouse():
     return locals()
 
 
+def region():
+    response.view = 'default/library.load'
+    query = db.region
+    grid, title = library(query, 'region|regions',request.args(0), 
+        create=can_add_library, editable=can_edit_library, deletable=can_delete_library)
+
+    return locals()
+
+
+def branch():
+    response.view = 'default/library.load'
+    query = db.branch
+    grid, title = library(query, 'branch|branches',request.args(0), 
+        create=can_add_library, editable=can_edit_library, deletable=can_delete_library)
+
+    return locals()
+
+
 def commodity():
     response.view = 'default/library.load'
     query = db.commodity
     grid, title = library(query, 'commodity|commodities',request.args(0), 
-        create=can_add_library, editable=can_edit_library, deletable=can_delete_library)
+        create=can_add_library, editable=lambda r: can_edit_library(r), deletable=lambda r: can_delete_library(r) )
 
     return locals()
 
