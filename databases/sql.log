@@ -1,4 +1,4 @@
-timestamp: 2023-05-11T11:45:01.764380
+timestamp: 2023-05-12T16:22:48.956119
 CREATE TABLE "auth_user"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "first_name" CHAR(128),
@@ -10,10 +10,15 @@ CREATE TABLE "auth_user"(
     "branch" INTEGER,
     "registration_key" CHAR(512),
     "reset_password_key" CHAR(512),
-    "registration_id" CHAR(512)
+    "registration_id" CHAR(512),
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.779999
+timestamp: 2023-05-12T16:22:48.966129
 CREATE TABLE "auth_group"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "role" CHAR(512),
@@ -26,14 +31,14 @@ CREATE TABLE "auth_group"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.779999
+timestamp: 2023-05-12T16:22:48.966129
 CREATE TABLE "auth_membership"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
     "group_id" INTEGER REFERENCES "auth_group" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.779999
+timestamp: 2023-05-12T16:22:48.981760
 CREATE TABLE "auth_permission"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "group_id" INTEGER REFERENCES "auth_group" ("id") ON DELETE CASCADE  ,
@@ -42,7 +47,7 @@ CREATE TABLE "auth_permission"(
     "record_id" INTEGER
 );
 success!
-timestamp: 2023-05-11T11:45:01.795508
+timestamp: 2023-05-12T16:22:48.981760
 CREATE TABLE "auth_event"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "time_stamp" TIMESTAMP,
@@ -52,7 +57,7 @@ CREATE TABLE "auth_event"(
     "description" TEXT
 );
 success!
-timestamp: 2023-05-11T11:45:01.795508
+timestamp: 2023-05-12T16:22:48.981760
 CREATE TABLE "auth_cas"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
@@ -62,7 +67,7 @@ CREATE TABLE "auth_cas"(
     "renew" CHAR(1)
 );
 success!
-timestamp: 2023-05-11T11:45:01.795508
+timestamp: 2023-05-12T16:22:48.997375
 CREATE TABLE "region"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "region_name" CHAR(512) UNIQUE,
@@ -75,7 +80,7 @@ CREATE TABLE "region"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.811135
+timestamp: 2023-05-12T16:22:48.997375
 CREATE TABLE "branch"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "branch_name" CHAR(512) UNIQUE,
@@ -89,7 +94,7 @@ CREATE TABLE "branch"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.842406
+timestamp: 2023-05-12T16:22:48.997375
 CREATE TABLE "warehouse"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "warehouse_name" CHAR(80) UNIQUE,
@@ -103,7 +108,7 @@ CREATE TABLE "warehouse"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.857999
+timestamp: 2023-05-12T16:22:49.013005
 CREATE TABLE "container"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "container_name" CHAR(20) UNIQUE,
@@ -116,7 +121,7 @@ CREATE TABLE "container"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.857999
+timestamp: 2023-05-12T16:22:49.013005
 CREATE TABLE "commodity"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "commodity_name" CHAR(80) UNIQUE,
@@ -128,7 +133,7 @@ CREATE TABLE "commodity"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.857999
+timestamp: 2023-05-12T16:22:49.028618
 CREATE TABLE "variety"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "variety_name" CHAR(20) UNIQUE,
@@ -140,7 +145,7 @@ CREATE TABLE "variety"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.873620
+timestamp: 2023-05-12T16:22:49.028618
 CREATE TABLE "stock_condition"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "condition_name" CHAR(50) UNIQUE,
@@ -152,7 +157,7 @@ CREATE TABLE "stock_condition"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.873620
+timestamp: 2023-05-12T16:22:49.028618
 CREATE TABLE "item"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "item_name" CHAR(80) UNIQUE,
@@ -166,7 +171,7 @@ CREATE TABLE "item"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.889242
+timestamp: 2023-05-12T16:22:49.044241
 CREATE TABLE "activity"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "activity_name" CHAR(80) UNIQUE,
@@ -178,7 +183,7 @@ CREATE TABLE "activity"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
-timestamp: 2023-05-11T11:45:01.895747
+timestamp: 2023-05-12T16:22:49.056252
 CREATE TABLE "WSR"(
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "doc_date" DATE,

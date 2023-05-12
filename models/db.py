@@ -118,6 +118,7 @@ db.define_table(
           writable=False, readable=False, default=''),
     Field('registration_id', length=512,                 # required
           writable=False, readable=False, default=''),
+    auth.signature,
     format='%(first_name)s %(last_name)s (%(id)s)'
     )
 
@@ -179,72 +180,6 @@ db.branch._after_insert = [lambda f, i: db(db.branch.id==i).update(seq=i)]
 custom_auth_table.region.requires = IS_EMPTY_OR(IS_IN_DB(db, 'region.id', '%(region_name)s'))
 custom_auth_table.branch.requires = IS_EMPTY_OR(IS_IN_DB(db, 'branch.id', '%(branch_name)s'))
 
-# initialize users and groups
-
-if db(db.auth_user.id).count() < 1:
-    user_id = db.auth_user.validate_and_insert(email="admin@email.com", first_name="admin", last_name="admin", password="Password1")
-    user = db(db.auth_user.id==user_id).select().first()
-    auth.login_bare(user.email, user.password)
-
-    group_id = db.auth_group.insert(role="admin", description="admin group")
-    auth.add_membership(group_id, user_id)
-
-if db(db.auth_group.id).count() < 2:
-    db.auth_group.insert(role='co admin')
-    db.auth_group.insert(role='co user')
-    db.auth_group.insert(role='ro admin')
-    db.auth_group.insert(role='ro user')
-    db.auth_group.insert(role='br admin')
-    db.auth_group.insert(role='br user')
-    db.auth_group.insert(role='wh supervisor')
-    db.auth_group.insert(role='wh asssistant')
-    db.auth_group.insert(role='cashier')
-    db.auth_group.insert(role='sdo')
-    db.auth_group.insert(role='sco')
-
-# initialize regions and branches
-
-if db(db.region.id).count() < 1:
-    db.region.insert(region_name='Region 1 - Ilocos', short_name='Ilocos')
-    db.region.insert(region_name='Region 2 - Cagayan Valley', short_name='CVR')
-    db.region.insert(region_name='Region 3 - Central Luzon', short_name='CLR')
-    db.region.insert(region_name='Region 4 - Southern Tagalog', short_name='STR')
-    db.region.insert(region_name='Region 5 - Bicol', short_name='Bicol')
-    db.region.insert(region_name='Region 6 - Western Visayas', short_name='WVR')
-    db.region.insert(region_name='Region 7 - Central Visayas', short_name='CViR')
-    db.region.insert(region_name='Region 8 - Eastern Visayas Region', short_name='EVR')
-    db.region.insert(region_name='Region 9 - Western Mindanao', short_name='WMR')
-    db.region.insert(region_name='Region 10 - Northeastern Mindanao', short_name='NEMR')
-    db.region.insert(region_name='Region 11 - Southeastern Mindanao', short_name='SEMR')
-    db.region.insert(region_name='Region 12 - Southern Mindanao', short_name='SMR')
-    db.region.insert(region_name='National Capital Region', short_name='NCR')
-    db.region.insert(region_name='ARMM', short_name='ARMM')
-    db.region.insert(region_name='CARAGA', short_name='CARAGA')
-
-region2_id = db(db.region.short_name=='CVR').select().first()['id']
-region7_id = db(db.region.short_name=='CViR').select().first()['id']
-region8_id = db(db.region.short_name=='EVR').select().first()['id']
-
-if db(db.branch.id).count() < 1:
-    db.branch.insert(branch_name='Isabela Branch', short_name='ISA', region_id=region2_id)
-    db.branch.insert(branch_name='Cagayan Branch', short_name='CAG', region_id=region2_id)
-    db.branch.insert(branch_name='Nueva Vizcaya Branch', short_name='NVA', region_id=region2_id)
-    db.branch.insert(branch_name='Leyte Branch', short_name='TCN', region_id=region8_id)
-    db.branch.insert(branch_name='Samar Branch', short_name='SMR', region_id=region8_id)
-
-br_leyte_id = db(db.branch.short_name=='TCN').select().first()['id']
-br_samar_id = db(db.branch.short_name=='SMR').select().first()['id']
-# add a few users
-if db(db.auth_user.id).count() < 2:
-    db.auth_user.validate_and_insert(email='venus@email.com', first_name='Venus', last_name='Prima', password='Password1', region=region8_id, branch=br_leyte_id)
-    db.auth_user.validate_and_insert(email='cebpac@email.com', first_name='Jeff', last_name='Plata', password='Password1', region=region8_id)
-    db.auth_user.validate_and_insert(email='enidganda@email.com', first_name='Nadine', last_name='Sandino', password='Password1', region=region8_id, branch=br_leyte_id)
-    db.auth_user.validate_and_insert(email='ejconchada@email.com', first_name='Eduard Jayson', last_name='Conchada', password='Password1', region=region8_id)
-    db.auth_user.validate_and_insert(email='saldy@email.com', first_name='Salvador', last_name='Ada', password='Password1', region=region8_id, branch=br_samar_id)
-    db.auth_user.validate_and_insert(email='reco7@email.com', first_name='RECO of R7', last_name='reco 7', password='Password1', region=region7_id)
-    db.auth_user.validate_and_insert(email='reco2@email.com', first_name='RECO of R2', last_name='reco 2', password='Password1', region=region2_id)
-
-
 
 # -------------------------------------------------------------------------
 # configure email
@@ -305,3 +240,31 @@ if configuration.get('scheduler.enabled'):
 # after defining tables, uncomment below to enable auditing
 # -------------------------------------------------------------------------
 # auth.enable_record_versioning(db)
+
+
+# initialize users and groups
+
+auth.settings.login_onaccept = lambda form: __on_login()
+auth.settings.logout_onlogout = lambda user: __on_logout()
+
+def __on_login():
+    if db(db.auth_user.id).count() == 1:
+        group_id = db.auth_group.insert(role="admin", description="admin group")
+        auth.add_membership(group_id, auth.user_id)
+
+    adminuser = auth.has_membership('admin')
+    adminusers = adminuser or auth.has_membership('co admin') or auth.has_membership('ro admin') or auth.has_membership('br admin')
+    session.adminuser = adminuser
+    session.adminusers = adminusers
+
+    if db(db.auth_user.id).count() == 1:
+        init_tables()
+        init_tables_libraries()
+
+    return None
+
+def __on_logout():
+    session.adminuser = None
+    session.adminusers = None
+    return None
+    

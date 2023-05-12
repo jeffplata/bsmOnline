@@ -4,7 +4,6 @@ mdy = '%m/%d/%Y'
 mdy_date = IS_DATE(format='%m/%d/%Y')
 moneytize = lambda v: '{:,.2f}'.format(v)
 max_bags = 999999999
-adminuser = auth.has_membership('admin')
 
 
 def is_float(s):
@@ -32,8 +31,19 @@ def next_month(date, force_day=0):
         next_month = next_month.replace(day=force_day)        
     return next_month
 
+def record_signature(r):
+    created_by = db.auth_user(r.created_by)
+    modified_by = created_by if r.created_by==r.modified_by else db.auth_user(r.modified_by)
+    return 'Created by '+ created_by.first_name+ ' '+ created_by.last_name+ ' on '+ r.created_on.strftime("%m/%d/%Y, %H:%M:%S")+\
+           '\nModified by '+ modified_by.first_name+ ' '+ modified_by.last_name+ ' on '+ r.modified_on.strftime("%m/%d/%Y, %H:%M:%S")
 
-@auth.requires(adminuser or auth.has_permission('view','library'))
+def append_record_signature(grid, r):
+    if grid.view_form and session.adminusers:
+        d = DIV(record_signature(r), _style='white-space:pre; border-top: 1px solid #eaeaea', _class='text-muted')
+        grid.view_form[0].append(d)
+    return None
+
+@auth.requires(session.adminuser or auth.has_permission('view','library'))
 def library(query, title, action=None, **kwargs):
     t1 = title.split('|')[0]
     t2 = title.split('|')[1] if '|' in title else t1
@@ -134,41 +144,3 @@ db.define_table('WSR',
     Field('net_weight', 'decimal(15,3)'),
     auth.signature,
     )
-
-
-# initialize libraries
-
-if db(db.commodity.id).count() < 1:
-    db.commodity.insert(commodity_name='Local Palay', is_cereal=True)
-    db.commodity.insert(commodity_name='Local Rice', is_cereal=True)
-
-if db(db.container.id).count() < 1:
-    db.container.insert(container_name='PPR E50', container_shortname='E50', weight=0.095)
-    db.container.insert(container_name='PPM G50', container_shortname='G50', weight=0.075)
-
-if db(db.variety.id).count() < 1:
-    local_palay = db(db.commodity.commodity_name=='Local Palay').select().first()
-    local_rice = db(db.commodity.commodity_name=='Local Rice').select().first()
-    db.variety.insert(variety_name='PD1', commodity_id=local_palay)
-    db.variety.insert(variety_name='PD3', commodity_id=local_palay)
-    db.variety.insert(variety_name='PW1', commodity_id=local_palay)
-    db.variety.insert(variety_name='PW3', commodity_id=local_palay)
-    db.variety.insert(variety_name='WD1', commodity_id=local_rice)
-    db.variety.insert(variety_name='WD2', commodity_id=local_rice)
-
-if db(db.activity.id).count() < 1:
-    db.activity.insert(activity_name='Procurement', applies_to='receipts')
-    db.activity.insert(activity_name='Sales', applies_to='issues')
-    db.activity.insert(activity_name='Transfer-in', applies_to='receipts')
-    db.activity.insert(activity_name='Transfer-out', applies_to='issues')
-    db.activity.insert(activity_name='Mechanical Drying', applies_to='any')
-    db.activity.insert(activity_name='Solar Drying', applies_to='any')
-    db.activity.insert(activity_name='Milling', applies_to='any')
-
-if db(db.stock_condition.id).count() < 1:
-    db.stock_condition.validate_and_insert(condition_name='Good', short_name='GD')
-    db.stock_condition.validate_and_insert(condition_name='Infested', short_name='INF')
-    db.stock_condition.validate_and_insert(condition_name='Treated', short_name='TD')
-    db.stock_condition.validate_and_insert(condition_name='Partially Damaged', short_name='PD')
-    db.stock_condition.validate_and_insert(condition_name='Totally Damaged', short_name='TD')
-

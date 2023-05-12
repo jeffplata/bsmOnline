@@ -10,12 +10,12 @@
 def index():
     return locals()
 
-can_view_user = auth.has_permission('view', 'user') or adminuser
-can_add_user = auth.has_permission('add', 'user') or adminuser
-can_edit_user = auth.has_permission('edit', 'user') or adminuser
-can_delete_user = auth.has_permission('delete', 'user') or adminuser
+can_view_user = auth.has_permission('view', 'user') or session.adminuser
+can_add_user = auth.has_permission('add', 'user') or session.adminuser
+can_edit_user = auth.has_permission('edit', 'user') or session.adminuser
+can_delete_user = auth.has_permission('delete', 'user') or session.adminuser
 
-@auth.requires(adminuser or can_view_user)
+@auth.requires(session.adminuser or can_view_user)
 def user_manage():
     title = 'Users'
     if request.args(0) in ['view', 'edit', 'new']:
@@ -47,7 +47,7 @@ def user_manage():
         fields=[db.auth_user[f] for f in fields.split(',')],
         create=can_add_user, 
         editable=can_edit_user,
-        deletable=lambda r: (r.email != 'admin@email.com') and can_delete_user,
+        deletable=lambda r: ((r.email != 'admin@email.com') and (r.id != me)) and can_delete_user,
         csv=False, formname='user_grid')
     # grid, title = library(db['auth_user'], 'User', request.args(0))
     group_grid = None
@@ -66,11 +66,12 @@ def user_manage():
                 _class='form-group row',
                 _style='white-space:pre; border-top: 1px solid #eaeaea')
         grid.view_form[0].append(d)
+        append_record_signature(grid, db.auth_user(request.args(2)))
 
     return dict(grid=grid, title=title)
 
 
-@auth.requires(adminuser or can_view_user)
+@auth.requires(session.adminuser or can_view_user)
 def user_group():
     if request.args(0)=='delete':
         db(db.auth_membership.id==request.args(2)).delete()
@@ -118,14 +119,14 @@ def user_group_new():
     redirect(URL('user_group', user_signature=True))
 
 
-@auth.requires(adminuser or can_view_user)
+@auth.requires(session.adminuser or can_view_user)
 def group_manage():
     btn_class = 'button btn btn-secondary'
     title = 'Groups'
     query = db['auth_group']
     links = [ dict(header='', body=lambda r: A('Permissions', _class='button btn btn-secondary', 
             _href=URL('default','group_permission', args=[r.id], user_signature=True), cid=request.cid )
-            if adminuser else '' )
+            if session.adminuser else '' )
             ]
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=can_add_user, 
@@ -138,7 +139,7 @@ def group_manage():
         BUTTON('Down', _id='down'), SPAN(' '),
         BUTTON('Top', _id='top'), SPAN(' '),
         BUTTON('Bottom', _id='bottom'),
-        ) if adminuser else None
+        ) if session.adminuser else None
     return dict(title=title, grid=grid, links=arrange_links )
 
 
