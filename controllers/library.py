@@ -43,8 +43,12 @@ def warehouse():
         if auth.user.region:
             db.warehouse.region_id.default = auth.user.region
             region_ops = db(db.region.id==auth.user.region)
-            branch_ops = db(db.branch.region_id==auth.user.region)
             db.warehouse.region_id.requires = IS_IN_DB(region_ops, 'region.id', '%(region_name)s', zero=None )
+            if auth.user.branch:
+                branch_ops = db(db.branch.id==auth.user.branch)
+                db.warehouse.branch_id.default = auth.user.branch
+            else:
+                branch_ops = db(db.branch.region_id==auth.user.region)
             db.warehouse.branch_id.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s', zero=None )
 
 
