@@ -21,8 +21,9 @@ def user_manage():
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} user"
 
-    u = db.auth_user(auth.user_id)
-    if auth.has_membership('admin'):
+    # u = db.auth_user(auth.user_id)
+    u = auth.user
+    if session.adminuser or auth.has_membership('co admin'):
         query = db['auth_user']
     elif auth.has_membership('ro admin'):
         query = db(db.auth_user.region==u.region)
@@ -48,7 +49,7 @@ def user_manage():
         create=can_add_user, 
         editable=can_edit_user,
         deletable=lambda r: ((r.email != 'admin@email.com') and (r.id != me)) and can_delete_user,
-        csv=False, formname='user_grid')
+        csv=True, formname='user_grid')
     # grid, title = library(db['auth_user'], 'User', request.args(0))
     group_grid = None
     if grid.update_form:

@@ -209,3 +209,177 @@ CREATE TABLE "WSR"(
     "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
 );
 success!
+timestamp: 2023-05-15T19:32:19.966408
+ALTER TABLE "WSR" ADD "reference_doc" CHAR(20);
+success!
+timestamp: 2023-05-15T19:32:19.981417
+CREATE TABLE "WSI"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "doc_date" DATE,
+    "doc_number" CHAR(40) UNIQUE,
+    "warehouse" INTEGER REFERENCES "warehouse" ("id") ON DELETE CASCADE  ,
+    "issued_to" CHAR(80),
+    "ai_no" CHAR(20),
+    "or_no" CHAR(20),
+    "variety" INTEGER REFERENCES "variety" ("id") ON DELETE RESTRICT  ,
+    "container" INTEGER REFERENCES "container" ("id") ON DELETE RESTRICT  ,
+    "bags" INTEGER,
+    "gross_weight" DOUBLE,
+    "net_weight" DOUBLE,
+    "activity" INTEGER REFERENCES "activity" ("id") ON DELETE RESTRICT  ,
+    "age" CHAR(20),
+    "stock_condition" INTEGER REFERENCES "stock_condition" ("id") ON DELETE RESTRICT  ,
+    "mc" DOUBLE,
+    "purity" DOUBLE,
+    "is_active" CHAR(1),
+    "created_on" TIMESTAMP,
+    "created_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  ,
+    "modified_on" TIMESTAMP,
+    "modified_by" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE  
+);
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2023-05-15T19:54:18.989111
+ALTER TABLE "variety" ADD "default_container" INTEGER REFERENCES "container" ("id") ON DELETE RESTRICT  ;
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
