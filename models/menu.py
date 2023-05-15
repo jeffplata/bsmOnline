@@ -27,8 +27,15 @@ if session.adminuser or auth.has_permission('view', 'library'):
 
 d = ('Documents', False, None, [])
 
+if auth.has_permission('view', 'wh docs'):
+    d[3].append(('WSR', False, URL('document', 'wsr', user_signature=True)))
+    d[3].append(('WSI', False, URL('document', 'wsi', user_signature=True)))
+
 if m[3]:
     response.menu += [m]
 
 if l[3]:
     response.menu += [l]
+
+if d[3]:
+    response.menu += [d]

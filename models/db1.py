@@ -101,6 +101,7 @@ db.define_table('stock_condition',
     Field('condition_name', 'string', length=50, unique=True),
     Field('short_name', 'string', length=5, unique=True),
     auth.signature,
+    format='%(condition_name)s'
     )
 
 db.define_table('item',
@@ -115,6 +116,7 @@ db.define_table('activity',
     Field('activity_name', 'string', length=80, unique=True),
     Field('applies_to', 'string', length=20, requires=IS_IN_SET(['any', 'receipts', 'issues'], zero=None)),
     auth.signature,
+    format='%(activity_name)s'
     )
 
 # db.item.item_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.item.item_name)]
@@ -129,8 +131,8 @@ db.define_table('WSR',
     doc_stamp,
     Field('warehouse', 'reference warehouse'),
     Field('received_from', 'string', length=80),
-    Field('AI_No', 'string', length=20),
-    Field('OR_No', 'string', length=20),
+    Field('AI_No', 'string', label='AI No', length=20),
+    Field('OR_No', 'string', label='OR No', length=20),
     Field('variety', 'reference variety', ondelete='RESTRICT'),
     Field('container', 'reference container', ondelete='RESTRICT'),
     Field('activity', 'reference activity', ondelete='RESTRICT'),

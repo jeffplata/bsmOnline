@@ -130,10 +130,11 @@ def group_manage():
             ]
     grid = SQLFORM.grid(query, orderby=[db.auth_group.ranks],
         create=can_add_user, 
-        editable=can_edit_user,
-        deletable=lambda r: (r.role != 'admin') and can_delete_user,
-        details=False, searchable=False, csv=False,
+        editable=lambda r: can_edit_user and r.created_by==me,
+        deletable=lambda r: (r.role != 'admin') and (session.adminuser or (can_delete_user and r.created_by==me)),
+        searchable=False, csv=False,
         formname='group_grid', links=links)
+    append_record_signature(grid, db.auth_group(request.args(2)))
     arrange_links = DIV(SPAN('Move item: '), 
         BUTTON('Up', _id='up'), SPAN(' '),
         BUTTON('Down', _id='down'), SPAN(' '),

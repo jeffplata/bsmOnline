@@ -1,4 +1,10 @@
 {{extend 'layout_ext.html'}}
+<h2>Dashboard</h2>
+{{if auth.user:}}
+    Hello, {{=auth.user.first_name}}.
+{{else:}}
+    Please login to access our services.
+{{pass}}
 
 <script>
     var u = $(".dropdown-menu a:contains('Users')").attr( 'data-w2p_target','main_div_comp' );
@@ -18,5 +24,9 @@
     var c = $(".dropdown-menu a:contains('Regions')").attr( 'data-w2p_target','main_div_comp' );
     c.attr("data-w2p_method", "GET");
     var c = $(".dropdown-menu a:contains('Branches')").attr( 'data-w2p_target','main_div_comp' );
+    c.attr("data-w2p_method", "GET");
+    var c = $(".dropdown-menu a:contains('WSR')").attr( 'data-w2p_target','main_div_comp' );
+    c.attr("data-w2p_method", "GET");
+    var c = $(".dropdown-menu a:contains('WSI')").attr( 'data-w2p_target','main_div_comp' );
     c.attr("data-w2p_method", "GET");
 </script>
