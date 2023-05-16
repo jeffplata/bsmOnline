@@ -66,6 +66,12 @@ db.define_table('warehouse',
 # db.warehouse.warehouse_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.warehouse.warehouse_name)]
 # db.warehouse.warehouse_code.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.warehouse.warehouse_code)]
 
+db.define_table('user_warehouse',
+    Field('user_id', db.auth_user, label='User', ondelete='RESTRICT'),
+    Field('warehouse_id', db.warehouse, label='Warehouse', ondelete='RESTRICT'),
+    auth.signature,
+    )
+
 
 db.define_table('container',
     Field('container_name', 'string', length=20, unique=True),
@@ -122,19 +128,17 @@ db.define_table('activity',
 
 # db.item.item_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.item.item_name)]
 
-
 doc_stamp = db.Table(db, 'doc_stamp',
     Field('doc_date', 'date', default=request.now, requires=IS_DATE(format='%m/%d/%Y') ),
     Field('doc_number', 'string', length=40, unique=True))
-
 
 db.define_table('WSR',
     doc_stamp,
     Field('warehouse', 'reference warehouse'),
     Field('received_from', 'string', length=80),
     Field('reference_doc', 'string', length=20),
-    Field('variety', 'reference variety', ondelete='RESTRICT'),
-    Field('container', 'reference container', ondelete='RESTRICT'),
+    Field('variety', 'reference variety', ondelete='RESTRICT', requires=IS_IN_DB(db, db.variety.id, '%(variety_name)s', zero=None)),
+    Field('container', 'reference container', ondelete='RESTRICT', requires=IS_IN_DB(db, db.container.id, '%(container_shortname)s', zero=None)),
     Field('bags', 'integer', requires=IS_INT_IN_RANGE(0,max_bags)),
     Field('gross_weight', 'decimal(15,3)'),
     Field('net_weight', 'decimal(15,3)'),

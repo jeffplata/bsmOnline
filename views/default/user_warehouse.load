@@ -1,0 +1,16 @@
+<h5 style='font-weight: 600;'>Assigned warehouses and facilities</h5>
+{{=grid}}
+{{=form.custom.begin}}
+<div class="row web2py_grid p-1 ">
+    <div class="col-lg-2">Warehouse:</div>
+    <div class="col-lg-4">{{=form.custom.widget.warehouse_id}}</div>
+    <div class="col-lg-2">{{=form.custom.submit}}</div>
+</div>
+{{=form.custom.end}}
+
+<script>
+    var f = $("#form_wh_add_id");
+    $(f).submit(function(){
+        ajax('{{=URL('default', 'user_warehouse_new')}}', ['warehouse_id'], );
+    });
+</script>

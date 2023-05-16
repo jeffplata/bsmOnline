@@ -8,7 +8,9 @@
 {{pass}}
 
 <script>
+    {{=ASSIGNJS(varcon=var_container)}}
     $('#WSR_variety').on('change', function(e) {
-        $('#WSR_container').val(1).change();
+        c = varcon[ $(this).find(':selected').val() ];
+        $('#WSR_container').val(c).change();
     });
 </script>

@@ -52,12 +52,14 @@ def user_manage():
         csv=True, formname='user_grid')
     # grid, title = library(db['auth_user'], 'User', request.args(0))
     group_grid = None
+
     if grid.update_form:
         grid.update_form.element('#auth_user_email')['_readonly'] = 'readonly'
         if auth.has_membership('admin', int(request.args(2)) ):
             grid.update_form.element('#auth_user_region__row')['_hidden'] = 'hidden'
             grid.update_form.element('#auth_user_branch__row')['_hidden'] = 'hidden'
         session.selected_user = int(request.args(2))
+
     elif grid.view_form:
         groups = db(db.auth_membership.user_id == int(request.args(2))).select(
             join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
@@ -66,7 +68,18 @@ def user_manage():
                 DIV([g.auth_group.role+'\n' for g in groups], _class='col-sm-9'),
                 _class='form-group row',
                 _style='white-space:pre; border-top: 1px solid #eaeaea')
+
+        whses = db(db.user_warehouse.user_id == int(request.args(2))).select(
+            join=db.warehouse.on(db.user_warehouse.warehouse_id==db.warehouse.id),
+            orderby=db.user_warehouse.id)
+        dw = DIV(LABEL('Warehouses', _class='readonly form-control-label col-sm-3'), 
+                DIV([w.warehouse.warehouse_name+'\n' for w in whses], _class='col-sm-9'),
+                _class='form-group row',
+                _style='white-space:pre; border-top: 1px solid #eaeaea')
+
         grid.view_form[0].append(d)
+        if whses:
+            grid.view_form[0].append(dw)
         append_record_signature(grid, db.auth_user(request.args(2)))
 
     return dict(grid=grid, title=title)
@@ -91,7 +104,7 @@ def user_group():
                       (row.group_id==admin_group_id and user.email=='admin@email.com')
         return not dont_delete
 
-    _link = [ dict(header='', body=lambda r: A('Delete', _class1='button btn btn-default btn-secondary', 
+    _link = [ dict(header='', body=lambda r: A('Remove', _class1='button btn btn-default btn-secondary', 
             _href=URL('default','user_group', args=['delete', 'auth_membership', r.id], user_signature=True), cid=request.cid )
             if can_delete_group(r) else ''
             ) ]
@@ -118,6 +131,39 @@ def user_group_new():
     db.auth_membership.insert(**fv)
     force_read = db(db.auth_membership).select().first()
     redirect(URL('user_group', user_signature=True))
+
+def user_warehouse():
+
+    if request.args(0)=='delete':
+        db(db.user_warehouse.id==request.args(2)).delete()
+        redirect(URL('user_group', user_signature=True))
+
+    _link = [ dict(header='', body=lambda r: A('Remove', 
+            _href=URL('default','user_warehouse', args=['delete', 'user_warehouse', r.id], user_signature=True), cid=request.cid )
+            ) ]
+
+    query = db.user_warehouse.user_id == session.selected_user
+    grid = SQLFORM.grid(query, fields=[db.user_warehouse.warehouse_id],
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
+        links=_link,
+        )
+
+    user_warehouses = db(db.user_warehouse.user_id==session.selected_user).select()
+    uw = [w.warehouse_id for w in user_warehouses]
+    warehouse_options = db(~db.warehouse.id.belongs(uw))
+
+    db.user_warehouse.user_id.default = session.selected_user
+    db.user_warehouse.warehouse_id.requires =  IS_IN_DB(warehouse_options, 'warehouse.id', '%(warehouse_name)s (%(id)s)', zero=None)
+    form = SQLFORM(db.user_warehouse, fields=['warehouse_id'], submit_button='Assign warehouse', formname='form_wh_add', _id='form_wh_add_id')
+
+    return dict(grid=grid, form=form)
+
+def user_warehouse_new():
+    warehouse_id = request.vars['warehouse_id']
+    fv = {'warehouse_id':warehouse_id, 'user_id':session.selected_user}
+    db.user_warehouse.insert(**fv)
+    force_read = db(db.user_warehouse).select().first()
+    redirect(URL('user_warehouse', user_signature=True))
 
 
 @auth.requires(session.adminuser or can_view_user)

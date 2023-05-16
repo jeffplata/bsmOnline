@@ -1,4 +1,4 @@
-<h5>Assigned groups</h5>
+<h5 style='font-weight: 600;'>Assigned groups</h5>
 {{=grid}}
 {{=form.custom.begin}}
 <div class="row web2py_grid p-1 ">

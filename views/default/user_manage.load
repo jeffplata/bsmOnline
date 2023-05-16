@@ -4,6 +4,8 @@
         {{=grid}}
         {{if grid.update_form:}}
             {{=LOAD(f='user_group.load', ajax=True, target='user_group_div')}}
+            <hr>
+            {{=LOAD(f='user_warehouse.load', ajax=True, target='user_warehouse_div')}}
         {{pass}}
     </div>
 {{else:}}
