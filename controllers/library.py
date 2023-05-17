@@ -29,15 +29,6 @@ def warehouse():
     title = 'Warehouses'
 
     query = db.warehouse
-    # if auth.has_membership('admin'):
-    #     query = db.warehouse
-    # elif auth.has_membership('ro admin'):
-    #     if auth.user.region:
-    #         q = db(db.branch.region_id==auth.user.region)._select(db.branch.id)
-    #         query = db.warehouse.branch_id.belongs(q)
-    # elif auth.has_membership('br admin'):
-    #     if auth.user.branch:
-    #         query = db.warehouse.branch_id==auth.user.branch
 
     if request.args(0)=='new':
         if auth.user.region:
@@ -69,15 +60,6 @@ def region():
 def branch():
     response.view = 'default/library.load'
     query = db.branch
-    # if session.adminuser or auth.has_membership('co admin'):
-    #     query = db.branch
-    # elif auth.has_membership('ro admin'):
-    #     if auth.user.region:
-    #         q = db(db.branch.region_id==auth.user.region)._select(db.branch.id)
-    #         query = db.branch.id.belongs(q)
-    # elif auth.has_membership('br admin'):
-    #     if auth.user.branch:
-    #         query = db(db.branch.id==auth.user.branch)
 
     grid, title = library(query, 'branch|branches',request.args(0), 
         create=can_add_library, editable=can_edit_library, deletable=can_delete_library)

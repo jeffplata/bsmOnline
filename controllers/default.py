@@ -21,7 +21,6 @@ def user_manage():
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} user"
 
-    # u = db.auth_user(auth.user_id)
     u = auth.user
     if session.adminuser or auth.has_membership('co admin'):
         query = db['auth_user']
@@ -50,10 +49,12 @@ def user_manage():
         editable=can_edit_user,
         deletable=lambda r: ((r.email != 'admin@email.com') and (r.id != me)) and can_delete_user,
         csv=True, formname='user_grid')
-    # grid, title = library(db['auth_user'], 'User', request.args(0))
     group_grid = None
 
     if grid.update_form:
+        _links = [A('groups', _href='#user_group_div'),
+                  A('warehouses', _href='#user_warehouse_div') ]
+        for link in _links: grid.element('.form_header').append(link)
         grid.update_form.element('#auth_user_email')['_readonly'] = 'readonly'
         if auth.has_membership('admin', int(request.args(2)) ):
             grid.update_form.element('#auth_user_region__row')['_hidden'] = 'hidden'
@@ -111,9 +112,11 @@ def user_group():
 
     query = db.auth_membership.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.auth_membership.group_id], 
-        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
-        links=_link,
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
+        links=_link, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=30,
         )
+    th = grid.element('thead')
+    if th: th['_hidden'] = 'hidden'
 
     user_groups = db(db.auth_membership.user_id==session.selected_user).select()
     ug = [g.group_id for g in user_groups]
@@ -125,6 +128,7 @@ def user_group():
 
     return dict(grid=grid, form=form)
 
+
 def user_group_new():
     group_id = request.vars['group_id']
     fv = {'group_id':group_id, 'user_id':session.selected_user}
@@ -132,11 +136,12 @@ def user_group_new():
     force_read = db(db.auth_membership).select().first()
     redirect(URL('user_group', user_signature=True))
 
+
 def user_warehouse():
 
     if request.args(0)=='delete':
         db(db.user_warehouse.id==request.args(2)).delete()
-        redirect(URL('user_group', user_signature=True))
+        redirect(URL('user_warehouse', user_signature=True))
 
     _link = [ dict(header='', body=lambda r: A('Remove', 
             _href=URL('default','user_warehouse', args=['delete', 'user_warehouse', r.id], user_signature=True), cid=request.cid )
@@ -144,9 +149,11 @@ def user_warehouse():
 
     query = db.user_warehouse.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.user_warehouse.warehouse_id],
-        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False,
-        links=_link,
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
+        links=_link, 
         )
+    th = grid.element('thead')
+    if th: th['_hidden'] = 'hidden'
 
     user_warehouses = db(db.user_warehouse.user_id==session.selected_user).select()
     uw = [w.warehouse_id for w in user_warehouses]
@@ -158,12 +165,42 @@ def user_warehouse():
 
     return dict(grid=grid, form=form)
 
+
 def user_warehouse_new():
     warehouse_id = request.vars['warehouse_id']
     fv = {'warehouse_id':warehouse_id, 'user_id':session.selected_user}
     db.user_warehouse.insert(**fv)
     force_read = db(db.user_warehouse).select().first()
     redirect(URL('user_warehouse', user_signature=True))
+
+
+def user_wh_supervisor():
+
+    if request.args(0)=='delete':
+        db(db.user_wh_supervisor.id==request.args(2)).delete()
+        redirect(URL('user_wh_supervisor', user_signature=True))
+
+    _link = [ dict(header='', body=lambda r: A('Remove', 
+            _href=URL('default','user_wh_supervisor', args=['delete', 'user_wh_supervisor', r.id], user_signature=True), cid=request.cid )
+            ) ]
+
+    query = db.user_wh_supervisor.user_id == session.selected_user
+    grid = SQLFORM.grid(query, fields=[db.user_wh_supervisor.wh_supervisor_id],
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
+        links=_link, 
+        )
+    th = grid.element('thead')
+    if th: th['_hidden'] = 'hidden'
+
+    user_wh_supervisors = db(db.user_wh_supervisor.user_id==session.selected_user).select()
+    uws = [ws.wh_supervisor_id for ws in user_wh_supervisors]
+    wh_supervisor_options = db(~db.auth_user.id.belongs(uws))
+
+    db.user_wh_supervisor.user_id.default = session.selected_user
+    db.user_wh_supervisor.wh_supervisor_id.requires = IS_IN_DB(wh_supervisor_options, 'auth_user.id', '%(first_name)s (%(last_name)s)', zero=None)
+    form = SQLFORM(db.user_wh_supervisor, fields=['wh_supervisor_id'], submit_button='Assign supervisor', formname='form_wh_sup_add', _id='form_wh_sup_add_id')
+
+    return dict(grid=grid, form=form)
 
 
 @auth.requires(session.adminuser or can_view_user)
@@ -297,5 +334,15 @@ def user():
     to decorate functions that need access control
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
+
+    if request.args(0) == 'profile':
+        if auth.user.region:
+            r_ops = db(db.region.id == auth.user.region)
+            db.auth_user.region.requires = IS_IN_DB(r_ops, db.region.id, '%(region_name)s', zero=None )
+        if auth.user.branch:
+            b_ops = db(db.branch.id == auth.user.branch)
+            db.auth_user.branch.requires = IS_IN_DB(b_ops, db.branch.id, '%(branch_name)s', zero=None )
+
     return dict(form=auth())
 
+# todo: disable region/branch change for own users

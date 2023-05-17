@@ -6,6 +6,8 @@
             {{=LOAD(f='user_group.load', ajax=True, target='user_group_div')}}
             <hr>
             {{=LOAD(f='user_warehouse.load', ajax=True, target='user_warehouse_div')}}
+            <hr>
+            {{=LOAD(f='user_wh_supervisor.load', ajax=True, target='user_wh_supervisor_div')}}
         {{pass}}
     </div>
 {{else:}}

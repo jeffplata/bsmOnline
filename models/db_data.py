@@ -9,7 +9,7 @@ def init_tables():
         db.auth_group.insert(role='br admin')
         db.auth_group.insert(role='br user')
         db.auth_group.insert(role='wh supervisor')
-        db.auth_group.insert(role='wh asssistant')
+        db.auth_group.insert(role='wh assistant')
         db.auth_group.insert(role='cashier')
         db.auth_group.insert(role='sdo')
         db.auth_group.insert(role='sco')

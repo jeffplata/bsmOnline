@@ -1,4 +1,4 @@
-<h5 style='font-weight: 600;'>Assigned warehouses and facilities</h5>
+<h5 style='font-weight: 600; background: #eaeaea; padding: 10px 5px;'>Assigned warehouses and facilities</h5>
 {{=grid}}
 {{=form.custom.begin}}
 <div class="row web2py_grid p-1 ">

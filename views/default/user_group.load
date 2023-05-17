@@ -1,10 +1,10 @@
-<h5 style='font-weight: 600;'>Assigned groups</h5>
+<h5 style='font-weight: 600; background: #eaeaea; padding: 10px 5px;'>Assigned groups</h5>
 {{=grid}}
 {{=form.custom.begin}}
 <div class="row web2py_grid p-1 ">
-    <div class="col-lg-1">Group:</div>
+    <div class="col-lg-2">Group:</div>
     <div class="col-lg-4">{{=form.custom.widget.group_id}}</div>
-    <div class="col-lg-1">{{=form.custom.submit}}</div>
+    <div class="col-lg-2">{{=form.custom.submit}}</div>
 </div>
 {{=form.custom.end}}
 

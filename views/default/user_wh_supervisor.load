@@ -1,0 +1,16 @@
+<h5 style='font-weight: 600; background: #eaeaea; padding: 10px 5px;'>Assigned supervisors</h5>
+{{=grid}}
+{{=form.custom.begin}}
+<div class="row web2py_grid p-1 ">
+    <div class="col-lg-4">Warehouse Supervisor:</div>
+    <div class="col-lg-4">{{=form.custom.widget.user_id}}</div>
+    <div class="col-lg-4">{{=form.custom.submit}}</div>
+</div>
+{{=form.custom.end}}
+
+<script>
+    var f = $("#form_wh_sup_add_id");
+    $(f).submit(function(){
+        ajax('{{=URL('default', 'user_wh_supervisor_new')}}', ['user_id'], );
+    });
+</script>

@@ -72,6 +72,11 @@ db.define_table('user_warehouse',
     auth.signature,
     )
 
+db.define_table('user_wh_supervisor',
+    Field('user_id', db.auth_user, label='User', ondelete='RESTRICT'),
+    Field('wh_supervisor_id', db.auth_user, label='Warehouse Supervisor', ondelete='RESTRICT'),
+    auth.signature,
+    )
 
 db.define_table('container',
     Field('container_name', 'string', length=20, unique=True),
@@ -134,7 +139,7 @@ doc_stamp = db.Table(db, 'doc_stamp',
 
 db.define_table('WSR',
     doc_stamp,
-    Field('warehouse', 'reference warehouse'),
+    Field('warehouse', 'reference warehouse', requires=IS_IN_DB(db, db.warehouse.id, '%(warehouse_name)s', zero=None)),
     Field('received_from', 'string', length=80),
     Field('reference_doc', 'string', length=20),
     Field('variety', 'reference variety', ondelete='RESTRICT', requires=IS_IN_DB(db, db.variety.id, '%(variety_name)s', zero=None)),
