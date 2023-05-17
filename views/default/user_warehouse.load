@@ -11,6 +11,8 @@
 <script>
     var f = $("#form_wh_add_id");
     $(f).submit(function(){
-        ajax('{{=URL('default', 'user_warehouse_new')}}', ['warehouse_id'], );
+        if ($('#user_warehouse_warehouse_id').val()) {
+            ajax('{{=URL('default', 'user_warehouse_new')}}', ['warehouse_id'], );
+        }
     });
 </script>

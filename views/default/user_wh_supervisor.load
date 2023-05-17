@@ -3,7 +3,7 @@
 {{=form.custom.begin}}
 <div class="row web2py_grid p-1 ">
     <div class="col-lg-4">Warehouse Supervisor:</div>
-    <div class="col-lg-4">{{=form.custom.widget.user_id}}</div>
+    <div class="col-lg-4">{{=form.custom.widget.wh_supervisor_id}}</div>
     <div class="col-lg-4">{{=form.custom.submit}}</div>
 </div>
 {{=form.custom.end}}
@@ -11,6 +11,7 @@
 <script>
     var f = $("#form_wh_sup_add_id");
     $(f).submit(function(){
-        ajax('{{=URL('default', 'user_wh_supervisor_new')}}', ['user_id'], );
+        if ($('#user_wh_supervisor_wh_supervisor_id').val())
+        ajax('{{=URL('default', 'user_wh_supervisor_new')}}', ['wh_supervisor_id'], );
     });
 </script>

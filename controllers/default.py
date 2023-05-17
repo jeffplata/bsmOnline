@@ -155,9 +155,20 @@ def user_warehouse():
     th = grid.element('thead')
     if th: th['_hidden'] = 'hidden'
 
+    u = db.auth_user(session.selected_user)
+    if u.branch:
+        warehouses = db(db.warehouse.branch_id==u.branch).select()
+        warehouse_ids = [w.id for w in warehouses]
+    elif u.region:
+        warehouses = db(db.warehouse.region_id==u.region).select()
+        warehouse_ids = [w.id for w in warehouses]
     user_warehouses = db(db.user_warehouse.user_id==session.selected_user).select()
     uw = [w.warehouse_id for w in user_warehouses]
-    warehouse_options = db(~db.warehouse.id.belongs(uw))
+    if warehouse_ids: 
+        [(warehouse_ids.remove(x) if x in warehouse_ids else None) for x in uw]
+        warehouse_options = db(db.warehouse.id.belongs(warehouse_ids))
+    else:
+        warehouse_options = db(~db.warehouse.id.belongs(uw))
 
     db.user_warehouse.user_id.default = session.selected_user
     db.user_warehouse.warehouse_id.requires =  IS_IN_DB(warehouse_options, 'warehouse.id', '%(warehouse_name)s (%(id)s)', zero=None)
@@ -201,6 +212,14 @@ def user_wh_supervisor():
     form = SQLFORM(db.user_wh_supervisor, fields=['wh_supervisor_id'], submit_button='Assign supervisor', formname='form_wh_sup_add', _id='form_wh_sup_add_id')
 
     return dict(grid=grid, form=form)
+
+# todo: limit warehouse supervisor who can be assigned to assistants
+def user_wh_supervisor_new():
+    wh_supervisor_id = request.vars['wh_supervisor_id']
+    fv = {'wh_supervisor_id':wh_supervisor_id, 'user_id':session.selected_user}
+    db.user_wh_supervisor.insert(**fv)
+    force_read = db(db.user_wh_supervisor).select().first()
+    redirect(URL('user_wh_supervisor', user_signature=True))
 
 
 @auth.requires(session.adminuser or can_view_user)
@@ -345,4 +364,4 @@ def user():
 
     return dict(form=auth())
 
-# todo: disable region/branch change for own users
+# todo: limit region/branch options in user edit
