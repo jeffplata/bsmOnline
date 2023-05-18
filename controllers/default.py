@@ -21,6 +21,12 @@ def user_manage():
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} user"
 
+    # m_g_id = auth.id_group('member')
+    # qm = db(db.auth_membership.group_id==m_g_id)._select(db.auth_membership.user_id)
+    # query = ~db.auth_user.id.belongs(qm)
+
+    qm = db(db.auth_user)._select(left=db.region.on(db.region.id==db.auth_user.region))
+
     u = auth.user
     if session.adminuser or auth.has_membership('co admin'):
         query = db['auth_user']
@@ -41,20 +47,44 @@ def user_manage():
             db.auth_user.branch.default = u.branch
             branch_ops =  db(db.branch.id==u.branch)
             db.auth_user.branch.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s', zero=None)
-    fields = 'first_name,last_name,middle_name,email,region,branch'
+
+    if request.args(0) == 'edit':
+        if auth.user.branch:
+            b_ops = db(db.branch.id == auth.user.branch)
+            db.auth_user.branch.requires = IS_IN_DB(b_ops, db.branch.id, '%(branch_name)s', zero=None )
+        if auth.user.region:
+            r_ops = db(db.region.id == auth.user.region)
+            db.auth_user.region.requires = IS_IN_DB(r_ops, db.region.id, '%(region_name)s', zero=None )
+            if not auth.user.branch:
+                b_ops = db(db.branch.region_id == auth.user.region)
+                db.auth_user.branch.requires = IS_IN_DB(b_ops, db.branch.id, '%(branch_name)s' )
+
+    # fields = 'first_name,last_name,middle_name,email,region,branch'
+    fields = [db.auth_user.first_name,db.auth_user.last_name,db.auth_user.middle_name,db.auth_user.email,\
+             db.region.region_name,db.branch.branch_name]
+
+    def can_delete(r):
+        # print(r, '\n')
+        try:
+            v = ((r.auth_user.email != 'admin@email.com') and (r.auth_user.id != me)) and can_delete_user
+        except:
+            v = False
+        return v
 
     grid = SQLFORM.grid(query, 
-        fields=[db.auth_user[f] for f in fields.split(',')],
+        fields=fields,
         create=can_add_user, 
         editable=can_edit_user,
-        deletable=lambda r: ((r.email != 'admin@email.com') and (r.id != me)) and can_delete_user,
-        csv=True, formname='user_grid')
-    group_grid = None
+        deletable=lambda r: can_delete(r),
+        left=[db.region.on(db.auth_user.region==db.region.id), db.branch.on(db.auth_user.branch==db.branch.id)],
+        csv=True, formname='user_grid', maxtextlength=60)
+    # group_grid = None
 
     if grid.update_form:
-        _links = [A('groups', _href='#user_group_div'),
-                  A('warehouses', _href='#user_warehouse_div') ]
-        for link in _links: grid.element('.form_header').append(link)
+        _links = CAT(A('groups', _href='#user_group_div'),
+                  A('warehouses', _href='#user_warehouse_div'),
+                  A('supervisors', _href='#user_wh_supervisor_div') )
+        grid.element('.form_header').append(_links)
         grid.update_form.element('#auth_user_email')['_readonly'] = 'readonly'
         if auth.has_membership('admin', int(request.args(2)) ):
             grid.update_form.element('#auth_user_region__row')['_hidden'] = 'hidden'
@@ -78,9 +108,17 @@ def user_manage():
                 _class='form-group row',
                 _style='white-space:pre; border-top: 1px solid #eaeaea')
 
+        sups = db(db.user_wh_supervisor.user_id == int(request.args(2))).select(
+            join=db.auth_user.on(db.user_wh_supervisor.wh_supervisor_id==db.auth_user.id),
+            orderby=db.user_wh_supervisor.id)
+        ds = DIV(LABEL('Supervisors', _class='readonly form-control-label col-sm-3'), 
+                DIV([s.auth_user.first_name+' '+s.auth_user.last_name+'\n' for s in sups], _class='col-sm-9'),
+                _class='form-group row',
+                _style='white-space:pre; border-top: 1px solid #eaeaea')
+
         grid.view_form[0].append(d)
-        if whses:
-            grid.view_form[0].append(dw)
+        if whses:  grid.view_form[0].append(dw)
+        if sups: grid.view_form[0].append(ds)
         append_record_signature(grid, db.auth_user(request.args(2)))
 
     return dict(grid=grid, title=title)
@@ -113,7 +151,7 @@ def user_group():
     query = db.auth_membership.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.auth_membership.group_id], 
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
-        links=_link, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=30,
+        links=_link, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=40,
         )
     th = grid.element('thead')
     if th: th['_hidden'] = 'hidden'
@@ -123,7 +161,8 @@ def user_group():
     group_options = db(~db.auth_group.id.belongs(ug) & (db.auth_group.ranks>=curr_user_highest_rank))
 
     db.auth_membership.user_id.default = session.selected_user
-    db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
+    # db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
+    db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)')
     form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add', _id='form_group_add_id')
 
     return dict(grid=grid, form=form)
@@ -150,18 +189,20 @@ def user_warehouse():
     query = db.user_warehouse.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.user_warehouse.warehouse_id],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
-        links=_link, 
+        links=_link, maxtextlength=40,
         )
     th = grid.element('thead')
     if th: th['_hidden'] = 'hidden'
 
-    u = db.auth_user(session.selected_user)
+    u = auth.user
     if u.branch:
         warehouses = db(db.warehouse.branch_id==u.branch).select()
-        warehouse_ids = [w.id for w in warehouses]
     elif u.region:
         warehouses = db(db.warehouse.region_id==u.region).select()
-        warehouse_ids = [w.id for w in warehouses]
+    else:
+        warehouses = db().select(db.warehouse.id)
+    warehouse_ids = [w.id for w in warehouses]
+
     user_warehouses = db(db.user_warehouse.user_id==session.selected_user).select()
     uw = [w.warehouse_id for w in user_warehouses]
     if warehouse_ids: 
@@ -171,7 +212,8 @@ def user_warehouse():
         warehouse_options = db(~db.warehouse.id.belongs(uw))
 
     db.user_warehouse.user_id.default = session.selected_user
-    db.user_warehouse.warehouse_id.requires =  IS_IN_DB(warehouse_options, 'warehouse.id', '%(warehouse_name)s (%(id)s)', zero=None)
+    # db.user_warehouse.warehouse_id.requires =  IS_IN_DB(warehouse_options, 'warehouse.id', '%(warehouse_name)s (%(id)s)', zero=None)
+    db.user_warehouse.warehouse_id.requires =  IS_IN_DB(warehouse_options, 'warehouse.id', '%(warehouse_name)s (%(id)s)')
     form = SQLFORM(db.user_warehouse, fields=['warehouse_id'], submit_button='Assign warehouse', formname='form_wh_add', _id='form_wh_add_id')
 
     return dict(grid=grid, form=form)
@@ -198,17 +240,31 @@ def user_wh_supervisor():
     query = db.user_wh_supervisor.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.user_wh_supervisor.wh_supervisor_id],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
-        links=_link, 
+        links=_link, maxtextlength=40,
         )
     th = grid.element('thead')
     if th: th['_hidden'] = 'hidden'
+    
+    if auth.user.branch:
+        sups = db(db.auth_user.branch==auth.user.branch).select()
+    elif auth.user.region:
+        sups = db(db.auth_user.region==auth.user.region).select()
+    else:
+        sups = db().select(db.auth_user.id)
+    sup_ids = [s.id for s in sups]
 
     user_wh_supervisors = db(db.user_wh_supervisor.user_id==session.selected_user).select()
     uws = [ws.wh_supervisor_id for ws in user_wh_supervisors]
-    wh_supervisor_options = db(~db.auth_user.id.belongs(uws))
+
+    if sup_ids: 
+        [(sup_ids.remove(x) if x in sup_ids else None) for x in uws]
+        wh_supervisor_options = db(db.auth_user.id.belongs(sup_ids))
+    else:
+        wh_supervisor_options = db(~db.auth_user.id.belongs(uws))
 
     db.user_wh_supervisor.user_id.default = session.selected_user
-    db.user_wh_supervisor.wh_supervisor_id.requires = IS_IN_DB(wh_supervisor_options, 'auth_user.id', '%(first_name)s (%(last_name)s)', zero=None)
+    # db.user_wh_supervisor.wh_supervisor_id.requires = IS_IN_DB(wh_supervisor_options, 'auth_user.id', '%(first_name)s (%(last_name)s)', zero=None)
+    db.user_wh_supervisor.wh_supervisor_id.requires = IS_IN_DB(wh_supervisor_options, 'auth_user.id', '%(first_name)s (%(last_name)s)')
     form = SQLFORM(db.user_wh_supervisor, fields=['wh_supervisor_id'], submit_button='Assign supervisor', formname='form_wh_sup_add', _id='form_wh_sup_add_id')
 
     return dict(grid=grid, form=form)
@@ -365,3 +421,4 @@ def user():
     return dict(form=auth())
 
 # todo: limit region/branch options in user edit
+# todo: user profile: user must not be able to change region/branch

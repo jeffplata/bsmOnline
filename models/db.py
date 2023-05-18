@@ -100,7 +100,6 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 #     ]
 # auth.settings.extra_fields['auth_user'] = []
 
-
 db.define_table(
     auth.settings.table_user_name,
     Field('first_name', length=128, default=''),

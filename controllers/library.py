@@ -42,9 +42,11 @@ def warehouse():
                 branch_ops = db(db.branch.region_id==auth.user.region)
             db.warehouse.branch_id.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s', zero=None )
 
-    grid = SQLFORM.grid(query, create=can_add_library, editable=can_edit_library, deletable=can_delete_library, maxtextlength=80)
+    grid, title = library(query, 'warehouse|Warehouses', request.args(0),
+        create=can_add_library, editable=can_edit_library, deletable=can_delete_library)
     append_record_signature(grid, db.warehouse(request.args(2)))
-    return locals()
+    
+    return dict(grid=grid, title=title)
 
 
 def region():
