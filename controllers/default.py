@@ -244,23 +244,26 @@ def user_wh_supervisor():
         )
     th = grid.element('thead')
     if th: th['_hidden'] = 'hidden'
+
+    join_query = [db.auth_membership.on(db.auth_user.id==db.auth_membership.user_id),
+                  db.auth_group.on((db.auth_membership.group_id==db.auth_group.id) & (db.auth_group.role=='wh supervisor')) ]
     
     if auth.user.branch:
-        sups = db(db.auth_user.branch==auth.user.branch).select()
+        sups = db(db.auth_user.branch==auth.user.branch).select(join=join_query)
+        print(sups)
     elif auth.user.region:
-        sups = db(db.auth_user.region==auth.user.region).select()
+        sups = db(db.auth_user.region==auth.user.region).select(join=join_query)
     else:
-        sups = db().select(db.auth_user.id)
+        sups = db().select(db.auth_user.id,join=join_query)
     sup_ids = [s.id for s in sups]
 
     user_wh_supervisors = db(db.user_wh_supervisor.user_id==session.selected_user).select()
     uws = [ws.wh_supervisor_id for ws in user_wh_supervisors]
 
-    if sup_ids: 
-        [(sup_ids.remove(x) if x in sup_ids else None) for x in uws]
-        wh_supervisor_options = db(db.auth_user.id.belongs(sup_ids))
-    else:
-        wh_supervisor_options = db(~db.auth_user.id.belongs(uws))
+    [(sup_ids.remove(x) if x in sup_ids else None) for x in uws]
+    wh_supervisor_options = db(db.auth_user.id.belongs(sup_ids))
+    # else:
+    #     wh_supervisor_options = db(~db.auth_user.id.belongs(uws))
 
     db.user_wh_supervisor.user_id.default = session.selected_user
     # db.user_wh_supervisor.wh_supervisor_id.requires = IS_IN_DB(wh_supervisor_options, 'auth_user.id', '%(first_name)s (%(last_name)s)', zero=None)
