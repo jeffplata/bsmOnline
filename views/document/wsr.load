@@ -9,8 +9,30 @@
 
 <script>
     {{=ASSIGNJS(varcon=var_container)}}
+    {{=ASSIGNJS(contcapacity=cont_capacity)}}
     $('#WSR_variety').on('change', function(e) {
         c = varcon[ $(this).find(':selected').val() ];
         $('#WSR_container').val(c).change();
+    });
+    $('#WSR_bags').on('change', function(e) {
+        sel_cont = $('#WSR_container').find(':selected')
+        bags = parseFloat($(this).val());
+        mts_wt = parseFloat(contcapacity[ sel_cont.val() ][1]) * bags;
+        w = parseFloat( contcapacity[ sel_cont.val() ][0] );
+        nw = bags * w;
+        gw = nw + mts_wt
+        if (isNaN(nw)) {nw = 0}
+        if (isNaN(gw)) {gw = 0}
+        $('#WSR_gross_weight').val(gw).change();
+        $('#WSR_net_weight').val(nw).change();
+    });
+    $('#WSR_gross_weight').on('change paste keyup', function(e) {
+        sel_cont = $('#WSR_container').find(':selected');
+        bags = parseFloat($('#WSR_bags').val());
+        cw = parseFloat( contcapacity[ sel_cont.val() ][1] ) * bags;
+        gw = parseFloat($(this).val());
+        nw = gw - cw
+        if (isNaN(nw)) {nw = 0}
+        $('#WSR_net_weight').val(nw).change()
     });
 </script>

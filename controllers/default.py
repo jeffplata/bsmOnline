@@ -153,8 +153,9 @@ def user_group():
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
         links=_link, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=40,
         )
-    th = grid.element('thead')
-    if th: th['_hidden'] = 'hidden'
+    # th = grid.element('thead')
+    # if th: th['_hidden'] = 'hidden'
+    grid.element('thead', replace=None)
 
     user_groups = db(db.auth_membership.user_id==session.selected_user).select()
     ug = [g.group_id for g in user_groups]

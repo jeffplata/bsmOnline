@@ -69,6 +69,7 @@ def init_tables_libraries():
     if db(db.container.id).count() < 1:
         db.container.insert(container_name='PPR E50', container_shortname='E50', weight=0.095)
         db.container.insert(container_name='PPM G50', container_shortname='G50', weight=0.075)
+        # todo: initialize weight capacity
 
     if db(db.variety.id).count() < 1:
         local_palay = db(db.commodity.commodity_name=='Local Palay').select().first()

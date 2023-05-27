@@ -9,6 +9,7 @@ def wsr():
     title = 'Warehouse Stock Receipt'
 
     var_container = dict((r.id, r.default_container) for r in db().select(db.variety.ALL))
+    cont_capacity = dict((r.id, [r.wt_capacity, r.weight]) for r in db().select(db.container.ALL))
 
     if request.args(0) == 'new':
         user_whses = db(db.user_warehouse.user_id==auth.user_id).select()
