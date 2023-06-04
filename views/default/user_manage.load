@@ -11,5 +11,20 @@
         {{pass}}
     </div>
 {{else:}}
-    {{=grid}}
+    <div class='row'>
+        <div class='col-md-2'>
+        </div>
+        <div class='col-md-10'>
+            {{=grid}}
+        </div>
+    </div>
 {{pass}}
+
+<script>
+    $('#auth_user_region').change( function(e) {
+        region_id = $(this).val();
+        // ajax("{{=URL('default','branch_options')}}" + "?region_id=" + region_id, [],
+        //     options => {$('#auth_user_branch').html(options)} );
+        ajax("{{=URL('default','branch_options')}}" + "?region_id=" + region_id, [], 'auth_user_branch' );
+    })
+</script>

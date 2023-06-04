@@ -9,10 +9,17 @@
 {{=form.custom.end}}
 
 <script>
+    // var f = $("#form_wh_add_id");
+    // $(f).submit(function(){
+    //     if ($('#user_warehouse_warehouse_id').val()) {
+    //         ajax('{{=URL('default', 'user_warehouse_new')}}', ['warehouse_id'], );
+    //     }
+    // });
+
     var f = $("#form_wh_add_id");
     $(f).submit(function(){
         if ($('#user_warehouse_warehouse_id').val()) {
-            ajax('{{=URL('default', 'user_warehouse_new')}}', ['warehouse_id'], );
+            ajax('{{=URL('default', 'user_warehouse', args=['new', 'user_warehouse'], user_signature=True)}}', ['warehouse_id'], );
         }
     });
 </script>

@@ -9,10 +9,19 @@
 {{=form.custom.end}}
 
 <script>
+    // restore this whole if anythong goes wrong
+    // var f = $("#form_group_add_id");
+    // $(f).submit(function(){
+    //     if ($('#auth_membership_group_id').val()) {
+    //        ajax('{{=URL('default', 'user_group_new')}}', ['group_id'], );
+    //     }
+    // });
+
+
     var f = $("#form_group_add_id");
     $(f).submit(function(){
         if ($('#auth_membership_group_id').val()) {
-           ajax('{{=URL('default', 'user_group_new')}}', ['group_id'], );
+           ajax('{{=URL('default', 'user_group', args=['new', 'auth_membership'], user_signature=True)}}', ['group_id'], );
         }
     });
 </script>

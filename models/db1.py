@@ -34,8 +34,10 @@ def next_month(date, force_day=0):
 def record_signature(r):
     created_by = db.auth_user(r.created_by)
     modified_by = created_by if r.created_by==r.modified_by else db.auth_user(r.modified_by)
-    return 'Created by '+ created_by.first_name+ ' '+ created_by.last_name+ ' on '+ r.created_on.strftime("%m/%d/%Y, %H:%M:%S")+\
-           '\nModified by '+ modified_by.first_name+ ' '+ modified_by.last_name+ ' on '+ r.modified_on.strftime("%m/%d/%Y, %H:%M:%S")
+    created_by_name = created_by.first_name+ ' '+ created_by.last_name if created_by else 'None'
+    modified_by_name =  modified_by.first_name+ ' '+ modified_by.last_name if modified_by else 'None'
+    return 'Created by '+ created_by_name+ ' on '+ r.created_on.strftime("%m/%d/%Y, %H:%M:%S") if r.created_on else 'None'+\
+           '\nModified by '+ modified_by_name+ ' on '+ r.modified_on.strftime("%m/%d/%Y, %H:%M:%S") if r.modified_on else 'None'
 
 def append_record_signature(grid, r):
     if grid.view_form and session.adminusers:
@@ -140,8 +142,8 @@ doc_stamp = db.Table(db, 'doc_stamp',
 
 db.define_table('WSR',
     doc_stamp,
-    Field('warehouse', 'reference warehouse', requires=IS_IN_DB(db, db.warehouse.id, '%(warehouse_name)s', zero=None)),
     Field('wh_supervisor', db.auth_user, label='Warehouse Supervisor'),
+    Field('warehouse', 'reference warehouse', requires=IS_IN_DB(db, db.warehouse.id, '%(warehouse_name)s', zero=None)),
     Field('received_from', 'string', length=80),
     Field('reference_doc', 'string', length=20),
     Field('variety', 'reference variety', ondelete='RESTRICT', requires=IS_IN_DB(db, db.variety.id, '%(variety_name)s', zero=None)),

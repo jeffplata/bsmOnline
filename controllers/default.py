@@ -12,8 +12,16 @@ def index():
 
 can_view_user = auth.has_permission('view', 'user') or session.adminuser
 can_add_user = auth.has_permission('add', 'user') or session.adminuser
-can_edit_user = auth.has_permission('edit', 'user') or session.adminuser
-can_delete_user = auth.has_permission('delete', 'user') or session.adminuser
+can_edit_user = session.adminuser or (auth.has_permission('edit', 'user') and session.adminusers)
+can_delete_user = session.adminuser or (auth.has_permission('delete', 'user') and session.adminusers)
+
+def branch_options():
+    options = ''
+    if request.vars.region_id:
+        branches = db(db.branch.region_id==request.vars.region_id).select(db.branch.ALL)
+        ops1 = [f"<option value={i['id']}>{i.branch_name}</option>" for i in branches]
+        options = ["<option value=></option>"] + ops1
+    return options
 
 @auth.requires(session.adminuser or can_view_user)
 def user_manage():
@@ -21,32 +29,49 @@ def user_manage():
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} user"
 
+    if request.args(0) == 'me':
+        query = db(db.auth_user.id == me)
+    elif request.args(0) == 'my_branch':
+        query = db(db.auth_user.branch == auth.user.branch)
+    elif request.args(0) == 'my_region':
+        query = db(db.auth_user.region == auth.user.region)
+
     # m_g_id = auth.id_group('member')
     # qm = db(db.auth_membership.group_id==m_g_id)._select(db.auth_membership.user_id)
     # query = ~db.auth_user.id.belongs(qm)
 
-    qm = db(db.auth_user)._select(left=db.region.on(db.region.id==db.auth_user.region))
+    # qm = db(db.auth_user)._select(left=db.region.on(db.region.id==db.auth_user.region))
 
-    u = auth.user
-    if session.adminuser or auth.has_membership('co admin'):
-        query = db['auth_user']
-    elif auth.has_membership('ro admin'):
-        query = db(db.auth_user.region==u.region)
-    elif auth.has_membership('br admin'):
-        query = db(db.auth_user.branch==u.branch)
+    # u = auth.user
+    # if session.adminuser or auth.has_membership('co admin'):
+    #     query = db['auth_user']
+    # elif auth.has_membership('ro admin'):
+    #     query = db(db.auth_user.region==u.region)
+    # elif auth.has_membership('br admin'):
+    #     query = db(db.auth_user.branch==u.branch)
+    # # elif auth.has_membership('wh supervisor'):
+    # else:
+    #     # allowed_groups = [auth.id_group('wh supervisor'), auth.id_group('wh assistant')]
+    #     # selected_users = db(db.auth_membership.group_id.belongs(allowed_groups)).select(db.auth_membership.user_id)
+    #     # query = db(db.auth_user.id.belongs([i.user_id for i in selected_users]))
+    #     query = db(db.auth_user.id==auth.user_id)
+
+    else:
+        query = db(db.auth_user)
     
     if request.args(0) == 'new':
         db.auth_user.password.readable = False
         db.auth_user.password.writable = False
         db.auth_user.password.default = db.auth_user.password.requires[0]('Password1')[0]
-        if u.region:
-            db.auth_user.region.default = u.region
-            region_ops = db(db.region.id==u.region)
-            db.auth_user.region.requires = IS_IN_DB(region_ops, 'region.id', '%(region_name)s', zero=None )
-        if u.branch:
-            db.auth_user.branch.default = u.branch
-            branch_ops =  db(db.branch.id==u.branch)
+        if auth.user.branch:
+            branch_ops =  db(db.branch.id==auth.user.branch)
             db.auth_user.branch.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s', zero=None)
+        if auth.user.region:
+            region_ops = db(db.region.id==auth.user.region)
+            db.auth_user.region.requires = IS_IN_DB(region_ops, 'region.id', '%(region_name)s', zero=None )
+            if not auth.user.branch:
+                branch_ops = db(db.branch.region_id==auth.user.region)
+                db.auth_user.branch.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s')
 
     if request.args(0) == 'edit':
         if auth.user.branch:
@@ -59,26 +84,23 @@ def user_manage():
                 b_ops = db(db.branch.region_id == auth.user.region)
                 db.auth_user.branch.requires = IS_IN_DB(b_ops, db.branch.id, '%(branch_name)s' )
 
-    # fields = 'first_name,last_name,middle_name,email,region,branch'
     fields = [db.auth_user.first_name,db.auth_user.last_name,db.auth_user.middle_name,db.auth_user.email,\
-             db.region.region_name,db.branch.branch_name]
+             db.region.region_name,db.branch.branch_name, db.region.id, db.branch.id, db.auth_user.created_by]
 
     def can_delete(r):
-        # print(r, '\n')
-        try:
-            v = ((r.auth_user.email != 'admin@email.com') and (r.auth_user.id != me)) and can_delete_user
-        except:
-            v = False
-        return v
+        return (hasattr(r, 'auth_user') and (r.auth_user.email != 'admin@email.com') and (r.auth_user.id != me)
+            and ((r.auth_user.created_by==me) or (r.branch.id==auth.user.branch))) and can_delete_user
 
+    db.region.id.listable = False
+    db.branch.id.listable = False
     grid = SQLFORM.grid(query, 
         fields=fields,
         create=can_add_user, 
-        editable=can_edit_user,
+        editable=lambda r: (hasattr(r, 'auth_user') and (r.auth_user.id == me)) or can_edit_user,
         deletable=lambda r: can_delete(r),
         left=[db.region.on(db.auth_user.region==db.region.id), db.branch.on(db.auth_user.branch==db.branch.id)],
+        represent_none='',
         csv=True, formname='user_grid', maxtextlength=60)
-    # group_grid = None
 
     if grid.update_form:
         _links = CAT(A('groups', _href='#user_group_div'),
@@ -91,7 +113,9 @@ def user_manage():
             grid.update_form.element('#auth_user_branch__row')['_hidden'] = 'hidden'
         session.selected_user = int(request.args(2))
 
+    # todo: be descriptive on view form with brancha and region
     elif grid.view_form:
+        # e = grid.view_form.element('#auth_user_region__row .col-sm-9')['textContent'] = 'xxx'
         groups = db(db.auth_membership.user_id == int(request.args(2))).select(
             join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
             orderby=db.auth_membership.id)
@@ -121,6 +145,19 @@ def user_manage():
         if sups: grid.view_form[0].append(ds)
         append_record_signature(grid, db.auth_user(request.args(2)))
 
+    elif grid.create_form:
+        pass
+    else:
+        # todo: prevent break of link text on smaller screen
+        _filter_links = CAT(
+            A('me', _href=URL('default', 'user_manage', args=['me'], user_signature=True), cid=request.cid),
+            A('my branch', _href=URL('default', 'user_manage', args=['my_branch'], user_signature=True), cid=request.cid)
+                if auth.user.branch else SPAN('my branch', _style='padding: 6px 12px;'),
+            A('my region', _href=URL('default', 'user_manage', args=['my_region'], user_signature=True), cid=request.cid)
+                if auth.user.region else SPAN('my region', _style='padding: 6px 12px;'),
+            )
+        grid.element('.web2py_console').append(_filter_links)
+
     return dict(grid=grid, title=title)
 
 
@@ -128,8 +165,17 @@ def user_manage():
 def user_group():
     if request.args(0)=='delete':
         db(db.auth_membership.id==request.args(2)).delete()
-        redirect(URL('user_group', user_signature=True))
+        db(db.auth_user.id==session.selected_user).update(last_change=f'removed from group')
+        response.js = "jQuery('#user_wh_supervisor_div').get(0).reload()"   # reload the wh_supervisor component
     
+    if request.args(0)=='new':
+        group_id = request.vars['group_id']
+        fv = {'group_id':group_id, 'user_id':session.selected_user}
+        db.auth_membership.insert(**fv)
+        force_read = db(db.auth_membership).select().first()
+        db(db.auth_user.id==session.selected_user).update(last_change=f"assigned to group {group_id}")
+        response.js = "jQuery('#user_wh_supervisor_div').get(0).reload()"   # reload the wh_supervisor component
+
     user = db(db.auth_user.id==session.selected_user).select().first()
     curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
         join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
@@ -153,8 +199,6 @@ def user_group():
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
         links=_link, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=40,
         )
-    # th = grid.element('thead')
-    # if th: th['_hidden'] = 'hidden'
     grid.element('thead', replace=None)
 
     user_groups = db(db.auth_membership.user_id==session.selected_user).select()
@@ -169,19 +213,29 @@ def user_group():
     return dict(grid=grid, form=form)
 
 
-def user_group_new():
-    group_id = request.vars['group_id']
-    fv = {'group_id':group_id, 'user_id':session.selected_user}
-    db.auth_membership.insert(**fv)
-    force_read = db(db.auth_membership).select().first()
-    redirect(URL('user_group', user_signature=True))
+# def user_group_new():
+#     group_id = request.vars['group_id']
+#     fv = {'group_id':group_id, 'user_id':session.selected_user}
+#     db.auth_membership.insert(**fv)
+#     force_read = db(db.auth_membership).select().first()
+#     db(db.auth_user.id==session.selected_user).update(last_change=f"assigned to group {group_id}")
+#     response.js = "jQuery('#user_wh_supervisor_div').get(0).reload()"   # reload the wh_supervisor component
+#     redirect(URL('user_group', user_signature=True))
 
 
+@auth.requires(session.adminuser or can_view_user)
 def user_warehouse():
-
     if request.args(0)=='delete':
         db(db.user_warehouse.id==request.args(2)).delete()
-        redirect(URL('user_warehouse', user_signature=True))
+        db(db.auth_user.id==session.selected_user).update(last_change=f"removed warehouse")
+        # redirect(URL('user_warehouse', user_signature=True))
+
+    if request.args(0)=='new':
+        warehouse_id = request.vars['warehouse_id']
+        fv = {'warehouse_id':warehouse_id, 'user_id':session.selected_user}
+        db.user_warehouse.insert(**fv)
+        force_read = db(db.user_warehouse).select().first()
+        db(db.auth_user.id==session.selected_user).update(last_change=f"assigned warehouse {warehouse_id}")
 
     _link = [ dict(header='', body=lambda r: A('Remove', 
             _href=URL('default','user_warehouse', args=['delete', 'user_warehouse', r.id], user_signature=True), cid=request.cid )
@@ -192,8 +246,7 @@ def user_warehouse():
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
         links=_link, maxtextlength=40,
         )
-    th = grid.element('thead')
-    if th: th['_hidden'] = 'hidden'
+    grid.element('thead', replace=None)
 
     u = auth.user
     if u.branch:
@@ -220,19 +273,29 @@ def user_warehouse():
     return dict(grid=grid, form=form)
 
 
-def user_warehouse_new():
-    warehouse_id = request.vars['warehouse_id']
-    fv = {'warehouse_id':warehouse_id, 'user_id':session.selected_user}
-    db.user_warehouse.insert(**fv)
-    force_read = db(db.user_warehouse).select().first()
-    redirect(URL('user_warehouse', user_signature=True))
+# def user_warehouse_new():
+#     warehouse_id = request.vars['warehouse_id']
+#     fv = {'warehouse_id':warehouse_id, 'user_id':session.selected_user}
+#     db.user_warehouse.insert(**fv)
+#     force_read = db(db.user_warehouse).select().first()
+#     db(db.auth_user.id==session.selected_user).update(last_change=f"assigned warehouse {warehouse_id}")
+#     redirect(URL('user_warehouse', user_signature=True))
 
 
+@auth.requires(session.adminuser or can_view_user)
 def user_wh_supervisor():
-
     if request.args(0)=='delete':
         db(db.user_wh_supervisor.id==request.args(2)).delete()
-        redirect(URL('user_wh_supervisor', user_signature=True))
+        db(db.auth_user.id==session.selected_user).update(last_change=f"removed supervisor")
+        # redirect(URL('user_wh_supervisor', user_signature=True))
+
+    if request.args(0)=='new':
+        wh_supervisor_id = request.vars['wh_supervisor_id']
+        fv = {'wh_supervisor_id':wh_supervisor_id, 'user_id':session.selected_user}
+        db.user_wh_supervisor.insert(**fv)
+        force_read = db(db.user_wh_supervisor).select().first()
+        db(db.auth_user.id==session.selected_user).update(last_change=f"assigned supervisor {wh_supervisor_id}")
+        # redirect(URL('user_wh_supervisor', user_signature=True))
 
     _link = [ dict(header='', body=lambda r: A('Remove', 
             _href=URL('default','user_wh_supervisor', args=['delete', 'user_wh_supervisor', r.id], user_signature=True), cid=request.cid )
@@ -243,15 +306,13 @@ def user_wh_supervisor():
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
         links=_link, maxtextlength=40,
         )
-    th = grid.element('thead')
-    if th: th['_hidden'] = 'hidden'
+    grid.element('thead', replace=None)
 
     join_query = [db.auth_membership.on(db.auth_user.id==db.auth_membership.user_id),
                   db.auth_group.on((db.auth_membership.group_id==db.auth_group.id) & (db.auth_group.role=='wh supervisor')) ]
     
     if auth.user.branch:
         sups = db(db.auth_user.branch==auth.user.branch).select(join=join_query)
-        print(sups)
     elif auth.user.region:
         sups = db(db.auth_user.region==auth.user.region).select(join=join_query)
     else:
@@ -274,12 +335,13 @@ def user_wh_supervisor():
     return dict(grid=grid, form=form)
 
 # todo: limit warehouse supervisor who can be assigned to assistants
-def user_wh_supervisor_new():
-    wh_supervisor_id = request.vars['wh_supervisor_id']
-    fv = {'wh_supervisor_id':wh_supervisor_id, 'user_id':session.selected_user}
-    db.user_wh_supervisor.insert(**fv)
-    force_read = db(db.user_wh_supervisor).select().first()
-    redirect(URL('user_wh_supervisor', user_signature=True))
+# def user_wh_supervisor_new():
+#     wh_supervisor_id = request.vars['wh_supervisor_id']
+#     fv = {'wh_supervisor_id':wh_supervisor_id, 'user_id':session.selected_user}
+#     db.user_wh_supervisor.insert(**fv)
+#     force_read = db(db.user_wh_supervisor).select().first()
+#     db(db.auth_user.id==session.selected_user).update(last_change=f"assigned supervisor {wh_supervisor_id}")
+#     redirect(URL('user_wh_supervisor', user_signature=True))
 
 
 @auth.requires(session.adminuser or can_view_user)

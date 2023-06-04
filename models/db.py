@@ -117,6 +117,8 @@ db.define_table(
           writable=False, readable=False, default=''),
     Field('registration_id', length=512,                 # required
           writable=False, readable=False, default=''),
+    Field('last_change', 'string', length=80,           # track outside changes, set manual
+        writable=False, readable=False),
     auth.signature,
     format='%(first_name)s %(last_name)s (%(id)s)'
     )

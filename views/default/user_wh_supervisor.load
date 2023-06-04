@@ -9,9 +9,16 @@
 {{=form.custom.end}}
 
 <script>
+    // var f = $("#form_wh_sup_add_id");
+    // $(f).submit(function(){
+    //     if ($('#user_wh_supervisor_wh_supervisor_id').val())
+    //     ajax('{{=URL('default', 'user_wh_supervisor_new')}}', ['wh_supervisor_id'], );
+    // });
+
+
     var f = $("#form_wh_sup_add_id");
     $(f).submit(function(){
         if ($('#user_wh_supervisor_wh_supervisor_id').val())
-        ajax('{{=URL('default', 'user_wh_supervisor_new')}}', ['wh_supervisor_id'], );
+        ajax('{{=URL('default', 'user_wh_supervisor', args=['new', 'user_wh_supervisor'], user_signature=True)}}', ['wh_supervisor_id'], );
     });
 </script>
