@@ -197,18 +197,23 @@ def user_group():
     query = db.auth_membership.user_id == session.selected_user
     grid = SQLFORM.grid(query, fields=[db.auth_membership.group_id], 
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
-        links=_link, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=40,
+        links=_link if session.adminusers else None, headers={'auth_membership.group_id':'Assigned groups'},  maxtextlength=40,
         )
     grid.element('thead', replace=None)
 
-    user_groups = db(db.auth_membership.user_id==session.selected_user).select()
-    ug = [g.group_id for g in user_groups]
-    group_options = db(~db.auth_group.id.belongs(ug) & (db.auth_group.ranks>=curr_user_highest_rank))
+    if session.adminusers:
+        user_groups = db(db.auth_membership.user_id==session.selected_user).select()
+        ug = [g.group_id for g in user_groups]
+        group_options = db(~db.auth_group.id.belongs(ug) & (db.auth_group.ranks>=curr_user_highest_rank))
 
-    db.auth_membership.user_id.default = session.selected_user
-    # db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
-    db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)')
-    form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add', _id='form_group_add_id')
+        db.auth_membership.user_id.default = session.selected_user
+        # db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
+        db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)')
+        form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add', _id='form_group_add_id')
+    else:
+        form = None
+        grid.append(DIV(STRONG('* You are not authorized to change assigned groups.')))
+
 
     return dict(grid=grid, form=form)
 
