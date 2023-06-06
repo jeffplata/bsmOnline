@@ -90,13 +90,21 @@ def user_manage():
     def can_delete(r):
         return (hasattr(r, 'auth_user') and (r.auth_user.email != 'admin@email.com') and (r.auth_user.id != me)
             and ((r.auth_user.created_by==me) or (r.branch.id==auth.user.branch))) and can_delete_user
+        # todo: can delete if:
+        #   same branch or same region
+        #   lower in rank
+        # current can delete test is wrong
+
+    def can_edit(r):
+        return hasattr(r, 'auth_user') and ((r.auth_user.id==me) or (can_edit_user and r.branch.id==auth.user.branch))
 
     db.region.id.listable = False
     db.branch.id.listable = False
     grid = SQLFORM.grid(query, 
         fields=fields,
         create=can_add_user, 
-        editable=lambda r: (hasattr(r, 'auth_user') and (r.auth_user.id == me)) or can_edit_user,
+        # editable=lambda r: (hasattr(r, 'auth_user') and (r.auth_user.id == me)) or can_edit_user,
+        editable=lambda r: can_edit(r),
         deletable=lambda r: can_delete(r),
         left=[db.region.on(db.auth_user.region==db.region.id), db.branch.on(db.auth_user.branch==db.branch.id)],
         represent_none='',
