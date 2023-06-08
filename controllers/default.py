@@ -88,8 +88,15 @@ def user_manage():
              db.region.region_name,db.branch.branch_name, db.region.id, db.branch.id, db.auth_user.created_by]
 
     def can_delete(r):
-        return (hasattr(r, 'auth_user') and (r.auth_user.email != 'admin@email.com') and (r.auth_user.id != me)
-            and ((r.auth_user.created_by==me) or (r.branch.id==auth.user.branch))) and can_delete_user
+        # return (hasattr(r, 'auth_user') and (r.auth_user.email != 'admin@email.com') and (r.auth_user.id != me)
+        #     and ((r.auth_user.created_by==me) or (r.branch.id==auth.user.branch))) and can_delete_user
+
+        return hasattr(r, 'auth_user') and can_delete_user and\
+            (
+            (r.auth_user.id != me) or (r.auth_user.created_by==me) and
+            (auth.user.branch and (auth.user.branch==r.branch.id)) or
+            (auth.user.region and (auth.user.region==r.region.id))
+            )
         # todo: can delete if:
         #   same branch or same region
         #   lower in rank
