@@ -36,8 +36,12 @@ def record_signature(r):
     modified_by = created_by if r.created_by==r.modified_by else db.auth_user(r.modified_by)
     created_by_name = created_by.first_name+ ' '+ created_by.last_name if created_by else 'None'
     modified_by_name =  modified_by.first_name+ ' '+ modified_by.last_name if modified_by else 'None'
-    return 'Created by '+ created_by_name+ ' on '+ r.created_on.strftime("%m/%d/%Y, %H:%M:%S") if r.created_on else 'None'+\
-           '\nModified by '+ modified_by_name+ ' on '+ r.modified_on.strftime("%m/%d/%Y, %H:%M:%S") if r.modified_on else 'None'
+    s = ''
+    if created_by:
+        s = 'Created by '+ created_by_name+ ' on '+ r.created_on.strftime("%m/%d/%Y, %H:%M:%S") +'\n'
+    if modified_by:
+        s = s + 'Modified by '+ modified_by_name+ ' on '+ r.modified_on.strftime("%m/%d/%Y, %H:%M:%S") 
+    return s
 
 def append_record_signature(grid, r):
     if grid.view_form and session.adminusers:
