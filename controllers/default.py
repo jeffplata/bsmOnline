@@ -38,6 +38,9 @@ def user_manage():
     elif request.args(0) == 'my_region':
         # query = db(db.auth_user.region == auth.user.region)
         query = (db.auth_user.region == auth.user.region)
+    else:
+        # query = db(db.auth_user)
+        query = (db.auth_user.id > 0)
 
     # m_g_id = auth.id_group('member')
     # qm = db(db.auth_membership.group_id==m_g_id)._select(db.auth_membership.user_id)
@@ -45,9 +48,6 @@ def user_manage():
 
     # qm = db(db.auth_user)._select(left=db.region.on(db.region.id==db.auth_user.region))
 
-    else:
-        # query = db(db.auth_user)
-        query = (db.auth_user.id > 0)
     
     if request.args(0) == 'new':
         db.auth_user.password.readable = False
@@ -86,6 +86,7 @@ def user_manage():
                         db.auth_user.id, min_val, groupby=db.auth_user.id
             )
         )
+    print(user_highest_ranks)
 
     curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
         join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
@@ -98,7 +99,7 @@ def user_manage():
                 ((r.auth_user.id != me) or (r.auth_user.created_by==me)) and
                 (((auth.user.branch and (auth.user.branch==r.branch.id)) or
                   (auth.user.region and not auth.user.branch and (auth.user.region==r.region.id))) and
-                  user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank
+                  ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
                 )
             )
         # todo: can delete if:
@@ -112,7 +113,7 @@ def user_manage():
                 (r.auth_user.created_by==me) or
                 (((auth.user.branch and (auth.user.branch==r.branch.id)) or
                   (auth.user.region and not auth.user.branch and (auth.user.region==r.region.id))) and
-                  user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank
+                  ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
                 ) or (r.auth_user.id == me)
             ) 
     db.region.id.listable = False
