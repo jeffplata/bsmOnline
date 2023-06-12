@@ -86,36 +86,57 @@ def user_manage():
                         db.auth_user.id, min_val, groupby=db.auth_user.id
             )
         )
-    print(user_highest_ranks)
 
     curr_user_highest_rank = db(db.auth_membership.user_id==auth.user_id).select(
         join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
         orderby=db.auth_group.ranks
         ).first()['auth_group.ranks']
 
+    wh_group_id = auth.id_group('wh supervisor')
+    wh_ast_group_id = auth.id_group('wh assistant')
+
+    def same_branch_or_region(r):
+        return ((auth.user.branch and (auth.user.branch==r.branch.id)) or
+                (auth.user.region and not auth.user.branch and (auth.user.region==r.region.id)))
+
     def can_delete(r):
-        return hasattr(r, 'auth_user') and can_delete_user and\
-            (
-                ((r.auth_user.id != me) or (r.auth_user.created_by==me)) and
-                (((auth.user.branch and (auth.user.branch==r.branch.id)) or
-                  (auth.user.region and not auth.user.branch and (auth.user.region==r.region.id))) and
-                  ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
-                )
-            )
+        if hasattr(r, 'auth_user'):
+            if r.auth_user.email=='admin@email.com':
+                return False
+            elif session.adminuser:
+                return True
+            else:
+                return can_delete_user and\
+                    (
+                        ((r.auth_user.id != me) or (r.auth_user.created_by==me)) and
+                        (same_branch_or_region(r) and
+                          ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
+                        )
+                    )
         # todo: can delete if:
         #   same branch or same region
         #   lower in rank
         # current can delete test is wrong
 
     def can_edit(r):
-        return hasattr(r, 'auth_user') and can_edit_user and\
-            (
-                (r.auth_user.created_by==me) or
-                (((auth.user.branch and (auth.user.branch==r.branch.id)) or
-                  (auth.user.region and not auth.user.branch and (auth.user.region==r.region.id))) and
-                  ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
-                ) or (r.auth_user.id == me)
-            ) 
+        if hasattr(r, 'auth_user'):
+            if session.adminuser:
+                return True
+            elif (r.auth_user.id == me) and can_edit_user:
+                return True
+            elif curr_user_highest_rank == wh_group_id: # warehouse supervisor
+                return can_edit_user and ((r.auth_user.id in user_highest_ranks.keys()) and \
+                    (user_highest_ranks[r.auth_user.id] == wh_ast_group_id) and same_branch_or_region(r))
+            elif curr_user_highest_rank >= wh_ast_group_id: # wh assistant, sco, sdo
+                return can_edit_user and (r.auth_user.id == me)
+            else:
+                return can_edit_user and\
+                    (
+                        (r.auth_user.created_by==me) or
+                        (same_branch_or_region(r) and
+                          ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
+                        ) #or (r.auth_user.id == me)
+                    ) 
     db.region.id.listable = False
     db.branch.id.listable = False
     grid = SQLFORM.grid(query, 
