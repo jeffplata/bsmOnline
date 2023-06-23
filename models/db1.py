@@ -31,6 +31,24 @@ def next_month(date, force_day=0):
         next_month = next_month.replace(day=force_day)        
     return next_month
 
+
+def get_next_number(table, next_number, number_format):
+    fld = db[table][next_number]
+    db.executesql('update %s set %s=%s+1;' % (table, next_number, next_number))
+    r = db.executesql('select %s, %s from %s' % (next_number, number_format, table))
+    nxn = r[0][0]
+    fmt = r[0][1]
+    fmt = datetime.now().strftime(fmt)
+    nph = re.search('\[0+\]', fmt)
+    nph = re.sub('[\[\]]', '', nph[0])
+    if len(nxn) >= len(nph):
+        nph = nxn
+    else:
+        nph = nph[0:len(nph)-len(nxn)] + nxn
+    nxn = re.sub('\[0+\]', nph, fmt)
+    return nxn
+
+
 def record_signature(r):
     created_by = db.auth_user(r.created_by)
     modified_by = created_by if r.created_by==r.modified_by else db.auth_user(r.modified_by)
@@ -139,6 +157,12 @@ db.define_table('activity',
     )
 
 # db.item.item_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.item.item_name)]
+
+db.define_table('user_doc_no',
+    Field('user_id', db.auth_user),
+    Field('docu', 'string'),
+    Field('lastno', 'string')
+    )
 
 doc_stamp = db.Table(db, 'doc_stamp',
     Field('doc_date', 'date', default=request.now, requires=IS_DATE(format='%m/%d/%Y') ),

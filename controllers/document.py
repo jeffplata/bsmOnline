@@ -71,7 +71,7 @@ def wsr():
         db.WSR.variety.default = list(var_container.keys())[0]
         db.WSR.container.default = list(var_container.values())[0]
 
-    grid = SQLFORM.grid(db.WSR,
+    grid = SQLFORM.grid(db.WSR, represent_none='',
         create=can_add_wh_docs, editable=can_edit_wh_docs, deletable=can_delete_wh_docs)
 
     return locals()
