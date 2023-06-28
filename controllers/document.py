@@ -73,6 +73,7 @@ def wsr():
 
     grid = SQLFORM.grid(db.WSR, represent_none='',
         create=can_add_wh_docs, editable=can_edit_wh_docs, deletable=can_delete_wh_docs)
+    append_record_signature(grid, db.WSR(request.args(2)))
 
     return locals()
 
