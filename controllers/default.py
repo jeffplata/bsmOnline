@@ -476,6 +476,14 @@ def group_rank_change():
     return
 
 
+def ws_accountability():
+    title = 'Accountabilities'
+    query = db.accountability
+    grid = SQLFORM.grid(query, represent_none = '')
+
+    return dict(grid=grid, title=title)
+
+
 # ---- Action for login/register/etc (required for auth) -----
 def user():
     """

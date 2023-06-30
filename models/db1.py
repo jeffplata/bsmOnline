@@ -90,6 +90,15 @@ db.define_table('warehouse',
 # db.warehouse.warehouse_name.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.warehouse.warehouse_name)]
 # db.warehouse.warehouse_code.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.warehouse.warehouse_code)]
 
+
+db.define_table('accountability',
+    Field('ws_id', db.auth_user, label='Supervisor'),
+    Field('wh_id', db.warehouse, label='Warehouse'),
+    Field('period_start', 'date', requires=IS_DATE(format='%m/%d/%Y')),
+    Field('period_end', 'date', requires=IS_EMPTY_OR(IS_DATE(format='%m/%d/%Y'))),
+    auth.signature,
+    )
+
 db.define_table('user_warehouse',
     Field('user_id', db.auth_user, label='User', ondelete='RESTRICT'),
     Field('warehouse_id', db.warehouse, label='Warehouse', ondelete='RESTRICT'),

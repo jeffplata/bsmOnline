@@ -120,7 +120,7 @@ db.define_table(
     Field('last_change', 'string', length=80,           # track outside changes, set manual
         writable=False, readable=False),
     auth.signature,
-    format='%(first_name)s %(last_name)s (%(id)s)'
+    format='%(first_name)s %(last_name)s'
     )
 
 ## do not forget validators

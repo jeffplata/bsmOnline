@@ -1,0 +1,8 @@
+<h4>{{=title}}</h4>
+{{if grid.view_form or grid.update_form or grid.create_form:}}
+    <div class="col-md-6">
+        {{=grid}}
+    </div>
+{{else:}}
+    {{=grid}}
+{{pass}}

@@ -13,6 +13,7 @@ m = ('Users', False, None, [])
 if session.adminuser or auth.has_permission('view', 'user'):
     m[3].append(('Users', False, URL('default', 'user_manage.load', vars={'table':'auth_user'}, user_signature=True)))
     m[3].append(('Groups and Permissions', False, URL('default', 'group_manage.load', user_signature=True)))
+    m[3].append(('Accountabilities', False, URL('default', 'ws_accountability.load', user_signature=True)))
 
 l = ('Library', False, None, [])
 
