@@ -478,7 +478,16 @@ def group_rank_change():
 
 def ws_accountability():
     title = 'Accountabilities'
-    query = db.accountability
+    if request.args(0) in ['view', 'edit', 'new']:
+        title = f"{request.args(0).capitalize()} accountability"
+    query = db.ws_accountability
+    if auth.user.branch:
+        whs = db(db.warehouse.branch_id==auth.user.branch)._select(db.warehouse.id)
+        query = db(db.ws_accountability.wh_id.belongs(whs))
+    if request.args(0) == 'new':
+        if auth.user.branch:
+            ws_op = db()
+            # db.auth_user.branch.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s')
     grid = SQLFORM.grid(query, represent_none = '')
 
     return dict(grid=grid, title=title)
