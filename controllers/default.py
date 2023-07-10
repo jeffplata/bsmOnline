@@ -486,9 +486,20 @@ def ws_accountability():
         query = db(db.ws_accountability.wh_id.belongs(whs))
     if request.args(0) == 'new':
         if auth.user.branch:
-            ws_op = db()
-            # db.auth_user.branch.requires = IS_IN_DB(branch_ops, 'branch.id', '%(branch_name)s')
-    grid = SQLFORM.grid(query, represent_none = '')
+            ws_ops = db(db.auth_user.branch==auth.user.branch)
+            db.ws_accountability.ws_id.requires = IS_IN_DB(ws_ops, 'auth_user.id', '%(first_name)s %(last_name)s', zero=None)
+            wh_ops = db(db.warehouse.branch_id==auth.user.branch)
+            db.ws_accountability.wh_id.requires = IS_IN_DB(wh_ops, 'warehouse.id', '%(warehouse_name)s', zero=None)
+        elif auth.user.region:
+            ws_ops = db(db.auth_user.region==auth.user.region)
+            db.ws_accountability.ws_id.requires = IS_IN_DB(ws_ops, 'auth_user.id', '%(first_name)s %(last_name)s', zero=None)
+            wh_ops = db(db.warehouse.region_id==auth.user.region)
+            db.ws_accountability.wh_id.requires = IS_IN_DB(wh_ops, 'warehouse.id', '%(warehouse_name)s', zero=None)
+
+    grid = SQLFORM.grid(query, represent_none = '', editable=False, csv=None)
+
+    if grid.view_form:
+        append_record_signature(grid, db.ws_accountability(request.args(2)))
 
     return dict(grid=grid, title=title)
 
