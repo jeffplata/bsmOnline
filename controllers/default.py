@@ -30,16 +30,12 @@ def user_manage():
         title = f"{request.args(0).capitalize()} user"
 
     if request.args(0) == 'me':
-        # query = db(db.auth_user.id == me)
         query = (db.auth_user.id == me)
     elif request.args(0) == 'my_branch':
-        # query = db(db.auth_user.branch == auth.user.branch)
         query = (db.auth_user.branch == auth.user.branch)
     elif request.args(0) == 'my_region':
-        # query = db(db.auth_user.region == auth.user.region)
         query = (db.auth_user.region == auth.user.region)
     else:
-        # query = db(db.auth_user)
         query = (db.auth_user.id > 0)
 
     # m_g_id = auth.id_group('member')
@@ -47,7 +43,6 @@ def user_manage():
     # query = ~db.auth_user.id.belongs(qm)
 
     # qm = db(db.auth_user)._select(left=db.region.on(db.region.id==db.auth_user.region))
-
     
     if request.args(0) == 'new':
         db.auth_user.password.readable = False
@@ -476,14 +471,19 @@ def group_rank_change():
     return
 
 
+@auth.requires_login()
 def ws_accountability():
     title = 'Accountabilities'
     if request.args(0) in ['view', 'edit', 'new']:
         title = f"{request.args(0).capitalize()} accountability"
-    query = db.ws_accountability
     if auth.user.branch:
         whs = db(db.warehouse.branch_id==auth.user.branch)._select(db.warehouse.id)
         query = db(db.ws_accountability.wh_id.belongs(whs))
+    elif auth.user.region:
+        whs = db(db.warehouse.region_id==auth.user.region)._select(db.warehouse.id)
+        query = db(db.ws_accountability.wh_id.belongs(whs))
+    else:
+        query = db.ws_accountability
     if request.args(0) == 'new':
         if auth.user.branch:
             ws_ops = db(db.auth_user.branch==auth.user.branch)
@@ -495,8 +495,12 @@ def ws_accountability():
             db.ws_accountability.ws_id.requires = IS_IN_DB(ws_ops, 'auth_user.id', '%(first_name)s %(last_name)s', zero=None)
             wh_ops = db(db.warehouse.region_id==auth.user.region)
             db.ws_accountability.wh_id.requires = IS_IN_DB(wh_ops, 'warehouse.id', '%(warehouse_name)s', zero=None)
+        else:
+            db.ws_accountability.ws_id.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s %(last_name)s', zero=None)
+            wh_ops = db(db.warehouse.region_id==auth.user.region)
+            db.ws_accountability.wh_id.requires = IS_IN_DB(db, 'warehouse.id', '%(warehouse_name)s', zero=None)
 
-    grid = SQLFORM.grid(query, represent_none = '', editable=False, csv=None)
+    grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=lambda r: r.created_by==me, csv=None)
 
     if grid.view_form:
         append_record_signature(grid, db.ws_accountability(request.args(2)))
