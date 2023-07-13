@@ -244,6 +244,12 @@ if configuration.get('scheduler.enabled'):
 
 
 # initialize users and groups
+def user_highest_rank(user_id):
+    rank = db(db.auth_membership.user_id==user_id).select(
+        join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id),
+        orderby=db.auth_group.ranks
+        ).first()['auth_group.ranks']
+    return rank
 
 auth.settings.login_onaccept = lambda form: __on_login()
 auth.settings.logout_onlogout = lambda user: __on_logout()
@@ -257,6 +263,7 @@ def __on_login():
     adminusers = adminuser or auth.has_membership('co admin') or auth.has_membership('ro admin') or auth.has_membership('br admin')
     session.adminuser = adminuser
     session.adminusers = adminusers
+    session.highest_rank = user_highest_rank(auth.user_id)
 
     if db(db.auth_user.id).count() == 1:
         init_tables()
