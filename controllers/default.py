@@ -500,7 +500,8 @@ def ws_accountability():
             wh_ops = db(db.warehouse.region_id==auth.user.region)
             db.ws_accountability.wh_id.requires = IS_IN_DB(db, 'warehouse.id', '%(warehouse_name)s', zero=None)
 
-    grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=session.adminusers, csv=None)
+    grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=session.adminusers, csv=None,
+        formname='grid_accountability')
 
     user_id=None
     if grid.view_form:
@@ -509,15 +510,17 @@ def ws_accountability():
 
     return dict(grid=grid, title=title, user_id=user_id)
 
+@auth.requires_login()
 def ws_accountability_user():
     query = db.ws_accountability_user.user_id == request.args(0)
     grid = SQLFORM.grid(query, fields=[db.ws_accountability_user.user_id],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
-        maxtextlength=40,
+        maxtextlength=40, formname='grid_accountability_user'
         )
     grid.element('thead', replace=None)
+    form = SQLFORM(db.ws_accountability_user, fields=['user_id'], submit_button='Assign user', formname='form_user_add', _id='form_user_add_id')
 
-    return dict(grid=grid)
+    return dict(grid=grid, form=form)
 
 
 # ---- Action for login/register/etc (required for auth) -----
