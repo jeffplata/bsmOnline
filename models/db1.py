@@ -99,6 +99,14 @@ db.define_table('ws_accountability',
     auth.signature,
     )
 
+
+db.define_table('ws_accountability_user',
+    Field('ws_accountability_id', db.ws_accountability, ondelete='RESTRICT'),
+    Field('user_id', db.auth_user, ondelete='RESTRICT'),
+    auth.signature,
+    )
+
+
 db.define_table('user_warehouse',
     Field('user_id', db.auth_user, label='User', ondelete='RESTRICT'),
     Field('warehouse_id', db.warehouse, label='Warehouse', ondelete='RESTRICT'),

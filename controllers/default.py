@@ -500,12 +500,24 @@ def ws_accountability():
             wh_ops = db(db.warehouse.region_id==auth.user.region)
             db.ws_accountability.wh_id.requires = IS_IN_DB(db, 'warehouse.id', '%(warehouse_name)s', zero=None)
 
-    grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=lambda r: r.created_by==me, csv=None)
+    grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=session.adminusers, csv=None)
 
+    user_id=None
     if grid.view_form:
         append_record_signature(grid, db.ws_accountability(request.args(2)))
+        user_id=request.args(2)
 
-    return dict(grid=grid, title=title)
+    return dict(grid=grid, title=title, user_id=user_id)
+
+def ws_accountability_user():
+    query = db.ws_accountability_user.user_id == request.args(0)
+    grid = SQLFORM.grid(query, fields=[db.ws_accountability_user.user_id],
+        create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
+        maxtextlength=40,
+        )
+    grid.element('thead', replace=None)
+
+    return dict(grid=grid)
 
 
 # ---- Action for login/register/etc (required for auth) -----

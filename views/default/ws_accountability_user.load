@@ -1,0 +1,29 @@
+<h5 style='font-weight: 600; background: #eaeaea; padding: 10px 5px;'>Assigned users</h5>
+{{=grid}}
+{{if form:}}
+    {{=form.custom.begin}}
+    <div class="row web2py_grid p-1 ">
+        <div class="col-lg-2">User:</div>
+        <div class="col-lg-4">{{=form.custom.widget.user_id}}</div>
+        <div class="col-lg-2">{{=form.custom.submit}}</div>
+    </div>
+    {{=form.custom.end}}
+{{pass}}
+
+<script>
+    // restore this whole if anythong goes wrong
+    // var f = $("#form_group_add_id");
+    // $(f).submit(function(){
+    //     if ($('#auth_membership_group_id').val()) {
+    //        ajax('{{=URL('default', 'user_group_new')}}', ['group_id'], );
+    //     }
+    // });
+
+
+    var f = $("#form_user_add_id");
+    $(f).submit(function(){
+        if ($('#auth_user_id').val()) {
+           ajax('{{=URL('default', 'ws_accountability_user', args=['new', 'ws_accountability_user'], user_signature=True)}}', ['user_id'], );
+        }
+    });
+</script>

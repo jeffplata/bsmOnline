@@ -2,6 +2,9 @@
 {{if grid.view_form or grid.update_form or grid.create_form:}}
     <div class="col-md-6">
         {{=grid}}
+        {{if grid.view_form:}}
+            {{=LOAD(f='ws_accountability_user.load', args=user_id, ajax=True, target='ws_accountability_user_div')}}
+        {{pass}}
     </div>
 {{else:}}
     {{=grid}}
