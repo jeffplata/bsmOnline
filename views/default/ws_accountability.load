@@ -3,7 +3,7 @@
     <div class="col-md-6">
         {{=grid}}
         {{if grid.view_form:}}
-            {{=LOAD(f='ws_accountability_user.load', ajax=True, args=user_id, target='ws_accountability_user_div')}}
+            {{=LOAD(f='ws_accountability_user.load', args=[accountability_id], user_signature=True, ajax=True, target='ws_accountability_user_div')}}
         {{pass}}
     </div>
 {{else:}}

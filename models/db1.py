@@ -96,6 +96,8 @@ db.define_table('ws_accountability',
     Field('wh_id', db.warehouse, label='Warehouse', ondelete='RESTRICT'),
     Field('period_start', 'date', requires=IS_DATE(format='%m/%d/%Y')),
     Field('period_end', 'date', requires=IS_EMPTY_OR(IS_DATE(format='%m/%d/%Y'))),
+    Field('last_change', 'string', length=80,           # track outside changes, set manual
+        writable=False, readable=False),
     auth.signature,
     )
 

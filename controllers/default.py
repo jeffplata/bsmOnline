@@ -503,22 +503,31 @@ def ws_accountability():
     grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=session.adminusers, csv=None,
         formname='grid_accountability')
 
-    user_id=None
+    accountability_id=None
     if grid.view_form:
         append_record_signature(grid, db.ws_accountability(request.args(2)))
-        user_id=request.args(2)
+        accountability_id=request.args(2)
 
-    return dict(grid=grid, title=title, user_id=user_id)
+    return dict(grid=grid, title=title, accountability_id=accountability_id)
 
 @auth.requires_login()
 def ws_accountability_user():
-    query = db.ws_accountability_user.user_id == request.args(0)
+    if request.args(0)=='new':
+        user_id = request.vars['user_id']
+        fv = {'ws_accountability_id':session.ws_accountability_id, 'user_id':user_id}
+        db.ws_accountability_user.insert(**fv)
+        force_read = db(db.ws_accountability_user).select().first()
+        db(db.ws_accountability.id==session.ws_accountability_id).update(last_change=f"assigned user {user_id}")
+
+    query = db.ws_accountability_user.ws_accountability_id == request.args(0)
     grid = SQLFORM.grid(query, fields=[db.ws_accountability_user.user_id],
         create=False, deletable=False , editable=False, details=False, searchable=False, csv=False, sortable=False,
         maxtextlength=40, formname='grid_accountability_user'
         )
     grid.element('thead', replace=None)
-    form = SQLFORM(db.ws_accountability_user, fields=['user_id'], submit_button='Assign user', formname='form_user_add', _id='form_user_add_id')
+    session.ws_accountability_id = request.args(0)
+    form = SQLFORM(db.ws_accountability_user, fields=['user_id'], submit_button='Assign user', 
+        formname='form_user_add', _id='form_user_add_id')
 
     return dict(grid=grid, form=form)
 

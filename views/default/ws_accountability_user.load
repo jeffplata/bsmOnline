@@ -11,19 +11,10 @@
 {{pass}}
 
 <script>
-    // restore this whole if anythong goes wrong
-    // var f = $("#form_group_add_id");
-    // $(f).submit(function(){
-    //     if ($('#auth_membership_group_id').val()) {
-    //        ajax('{{=URL('default', 'user_group_new')}}', ['group_id'], );
-    //     }
-    // });
-
-
     var f = $("#form_user_add_id");
     $(f).submit(function(){
-        if ($('#auth_user_id').val()) {
-           ajax('{{=URL('default', 'ws_accountability_user', args=['new', 'ws_accountability_user'], user_signature=True)}}', ['user_id'], );
+        if ($('#ws_accountability_user_user_id').val()) {
+           ajax('{{=URL('default', 'ws_accountability_user', args=['new'], user_signature=True)}}', ['user_id' ], );
         }
     });
 </script>
