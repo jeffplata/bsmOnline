@@ -512,12 +512,15 @@ def ws_accountability():
 
 @auth.requires_login()
 def ws_accountability_user():
+    accountability_id = request.args(0)
     if request.args(0)=='new':
+        accountability_id = None
+        ws_accountability_id = request.args(1)
         user_id = request.vars['user_id']
-        fv = {'ws_accountability_id':session.ws_accountability_id, 'user_id':user_id}
+        fv = {'ws_accountability_id':ws_accountability_id, 'user_id':user_id}
         db.ws_accountability_user.insert(**fv)
         force_read = db(db.ws_accountability_user).select().first()
-        db(db.ws_accountability.id==session.ws_accountability_id).update(last_change=f"assigned user {user_id}")
+        db(db.ws_accountability.id==ws_accountability_id).update(last_change=f"assigned user {user_id}")
 
     query = db.ws_accountability_user.ws_accountability_id == request.args(0)
     grid = SQLFORM.grid(query, fields=[db.ws_accountability_user.user_id],
@@ -525,11 +528,38 @@ def ws_accountability_user():
         maxtextlength=40, formname='grid_accountability_user'
         )
     grid.element('thead', replace=None)
-    session.ws_accountability_id = request.args(0)
-    form = SQLFORM(db.ws_accountability_user, fields=['user_id'], submit_button='Assign user', 
-        formname='form_user_add', _id='form_user_add_id')
+    grid.element('.web2py_console', replace=None)
+    form = None
+    if session.adminusers:
 
-    return dict(grid=grid, form=form)
+        u = auth.user
+        if u.branch:
+            users = db(db.auth_user.branch==u.branch).select()
+        elif u.region:
+            users = db(db.auth_user.region==u.region).select()
+        else:
+            users = db().select(db.auth_user.id)
+        user_ids = [u.id for u in users]
+
+        # request.args = 'action/table/id'
+        acc_users = db(db.ws_accountability_user.ws_accountability_id==request.args(0)).select(db.ws_accountability_user.user_id)
+        print(request.args)
+        print('request.args(2)', request.args(2))
+        print(acc_users)
+        au = [i.user_id for i in acc_users]
+        if user_ids: 
+            [(user_ids.remove(x) if x in user_ids else None) for x in au]
+            user_options = db(db.auth_user.id.belongs(user_ids))
+        else:
+            user_options = db(~db.auth_user.id.belongs(au))
+
+        db.ws_accountability_user.ws_accountability_id.default = request.args(2)
+        db.ws_accountability_user.user_id.requires = IS_IN_DB(user_options, 'auth_user.id', '%(first_name)s %(last_name)s')
+
+        form = SQLFORM(db.ws_accountability_user, fields=['ws_accountability_id', 'user_id'], submit_button='Assign user', 
+            formname='form_user_add', _id='form_user_add_id')
+
+    return dict(grid=grid, form=form, accountability_id=accountability_id)
 
 
 # ---- Action for login/register/etc (required for auth) -----

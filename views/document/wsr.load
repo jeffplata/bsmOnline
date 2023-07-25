@@ -4,6 +4,7 @@
         {{=grid}}
     </div>
 {{else:}}
+    {{=account_filter}}
     {{=grid}}
 {{pass}}
 

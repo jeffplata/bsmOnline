@@ -1,4 +1,4 @@
-<h5 style='font-weight: 600; background: #eaeaea; padding: 10px 5px;'>Assigned users</h5>
+<h5 style='font-weight: 600; background: #eaeaea; padding: 10px 5px;'>Assigned users:</h5>
 {{=grid}}
 {{if form:}}
     {{=form.custom.begin}}
@@ -14,7 +14,7 @@
     var f = $("#form_user_add_id");
     $(f).submit(function(){
         if ($('#ws_accountability_user_user_id').val()) {
-           ajax('{{=URL('default', 'ws_accountability_user', args=['new'], user_signature=True)}}', ['user_id' ], );
+           ajax('{{=URL('default', 'ws_accountability_user', args=['new', accountability_id], user_signature=True)}}', ['user_id' ], );
         }
     });
 </script>

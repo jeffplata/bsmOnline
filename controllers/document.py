@@ -25,6 +25,12 @@ def wsr():
     var_container = dict((r.id, r.default_container) for r in db().select(db.variety.ALL))
     cont_capacity = dict((r.id, [r.wt_capacity, r.weight]) for r in db().select(db.container.ALL))
 
+    s = "margin: 0px 5px 3px 0px;"
+    account_filter = FORM(
+        LABEL('Accountability:', _style=s),
+        SELECT('Jobet Atienza, Tacloban Port Area, 1/1/2021', 'Jobet Atienza, Baybay, 8/1/2023'),
+        _name="account_filter_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
+
     if request.args(0) == 'new':
         user_whses = db(db.user_warehouse.user_id==auth.user_id).select()
         wh_ids = [i.warehouse_id for i in user_whses]
@@ -71,6 +77,10 @@ def wsr():
         db.WSR.variety.default = list(var_container.keys())[0]
         db.WSR.container.default = list(var_container.values())[0]
 
+    db.WSR.age.listable = False
+    db.WSR.stock_condition.listable = False
+    db.WSR.MC.listable = False
+    db.WSR.purity.listable = False
     grid = SQLFORM.grid(db.WSR, represent_none='',
         create=can_add_wh_docs, editable=can_edit_wh_docs, deletable=can_delete_wh_docs)
     append_record_signature(grid, db.WSR(request.args(2)))
