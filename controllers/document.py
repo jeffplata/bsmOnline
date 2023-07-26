@@ -6,6 +6,32 @@
 can_view_wh_docs = auth.has_permission('view', 'wh docs') or session.adminuser
 can_add_wh_docs = auth.has_permission('add', 'wh docs') or session.adminuser
 
+def select_accountability():
+    response.view = 'document/select_accountability.load'
+    title = 'Select accountability:'
+    s = "margin: 0px 5px 3px 0px;"
+    lc = 'form-check-label'
+    cc = 'form-check-input'
+    dc = 'form-check'
+    form = FORM(
+        DIV(
+            INPUT(_type='radio', _class=cc, _name='acc', _id='acc0', _checked='checked'),
+            LABEL('Jobet Atienza, Tacloban Port Area, 1/1/2021', _class=lc),
+            _class=dc),
+        DIV(
+            INPUT(_type='radio', _class=cc, _name='acc', _id='acc1'),
+            LABEL('Jobet Atienza, Baybay, 8/1/2023', _class=lc),
+            _class=dc),
+        INPUT(_type='submit', _value='Continue', _class='btn button btn-primary'),
+        _name="select_accountability_form", method='GET', _class="xxxform-inline", _style="margin: 5px 0px")
+    if form.process().accepted:
+        print('accepted')
+        session.accountability = 0
+        redirect(URL('wsr', args=['new','WSR'], user_signature=True))
+
+    return dict(title=title, form=form)
+
+
 def can_modify(r):
     return (r.created_by==me) or\
         (auth.user.branch and (db.auth_user(r.created_by).branch==auth.user.branch)) or\
@@ -16,6 +42,7 @@ def can_edit_wh_docs(r):
 
 def can_delete_wh_docs(r):
     return session.adminuser or (auth.has_permission('delete', 'wh docs') and can_modify(r))
+
 
 @auth.requires(can_view_wh_docs)    
 def wsr():
@@ -28,10 +55,16 @@ def wsr():
     s = "margin: 0px 5px 3px 0px;"
     account_filter = FORM(
         LABEL('Accountability:', _style=s),
-        SELECT('Jobet Atienza, Tacloban Port Area, 1/1/2021', 'Jobet Atienza, Baybay, 8/1/2023'),
+        SELECT('','Jobet Atienza, Tacloban Port Area, 1/1/2021', 'Jobet Atienza, Baybay, 8/1/2023'),
         _name="account_filter_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
 
     if request.args(0) == 'new':
+        # user_accountabilities = db(db.ws_accountability.ws_id == auth.user_id).select()
+        # if len(user_accountabilities) > 1:
+        #     redirect()
+        if session.accountability == None:
+            redirect(URL('select_accountability', user_signature=True))
+
         user_whses = db(db.user_warehouse.user_id==auth.user_id).select()
         wh_ids = [i.warehouse_id for i in user_whses]
         if not user_whses:
@@ -51,7 +84,6 @@ def wsr():
             ws_group_id = auth.id_group('wh supervisor')
             user_highest_group = db(db.auth_membership.user_id==auth.user_id).select(db.auth_group.ranks.min().with_alias('highest_group'),
                 join=db.auth_group.on(db.auth_membership.group_id==db.auth_group.id))[0].highest_group
-            print('highest', user_highest_group)
             # if auth.has_membership('wh supervisor') and (user_highest_group):
             if user_highest_group == ws_group_id:   # rank is wh supervisor
                 ws_ids = [auth.user_id]
@@ -76,6 +108,9 @@ def wsr():
 
         db.WSR.variety.default = list(var_container.keys())[0]
         db.WSR.container.default = list(var_container.values())[0]
+    else:
+        if session.accountability:
+            del session.accountability
 
     db.WSR.age.listable = False
     db.WSR.stock_condition.listable = False
