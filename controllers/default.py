@@ -10,6 +10,57 @@
 def index():
     return locals()
 
+
+@auth.requires_login()
+def dashboard_ws():
+    title = "dashboard_ws"
+    accountabilities = db(db.ws_accountability.ws_id == auth.user_id).select(
+        db.ws_accountability.ALL, db.auth_user.ALL, db.warehouse.ALL,
+        join=[db.auth_user.on(db.ws_accountability.ws_id==db.auth_user.id),
+            db.warehouse.on(db.warehouse.id==db.ws_accountability.wh_id)])
+    # dropdown = DIV(BUTTON('Documents', _class='btn btn-secondary dropdown-toggle', _type='button', _id='ddbtn', data={'toggle':'dropdown'} ),
+    #     DIV(A('WSR', _class='dropdown-item'), A('WSI', _class='dropdown-item'), 
+    #         _class='dropdown-menu'),
+    #     _class='dropdown')
+
+    def get_dropdown(id):
+        props = {'w2p_target':'main_div_comp', 'w2p_method':'GET'}
+        return DIV(BUTTON('Documents', _class='btn btn-secondary dropdown-toggle', _type='button', _id=id, data={'toggle':'dropdown'} ),
+            DIV(A('WSR', _class='dropdown-item', _href=URL('document', 'wsr', vars={'accountability_id':id}), data={**props}), 
+                A('WSI', _class='dropdown-item', _href=URL('document', 'wsi'), data={**props}), 
+                _class='dropdown-menu'),
+            _class='dropdown')
+
+    tbl = TABLE(THEAD(TR(TH('Warehouse'), TH('Warehouse Supervisor'), TH('Start'), TH('End'), TH())),
+        TBODY(
+        [TR(i.warehouse.warehouse_name, 
+            i.auth_user.first_name+' '+i.auth_user.last_name, 
+            i.ws_accountability.period_start,
+            i.ws_accountability.period_end if i.ws_accountability.period_end else '',
+            get_dropdown(i.ws_accountability.id)
+            ) for i in accountabilities], ),
+        _class='table table-responsive')
+    content = DIV(
+        H4('Accountabilities:'),
+        tbl,
+        _class='p-3 border bg-light')
+    return locals()
+
+
+
+# <div class="dropdown">
+#   <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+#     Dropdown button
+#   </button>
+#   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+#     <a class="dropdown-item" href="#">Action</a>
+#     <a class="dropdown-item" href="#">Another action</a>
+#     <a class="dropdown-item" href="#">Something else here</a>
+#   </div>
+# </div>
+
+
+
 can_view_user = auth.has_permission('view', 'user') or session.adminuser
 can_add_user = auth.has_permission('add', 'user') or session.adminuser
 can_edit_user = session.adminuser or auth.has_permission('edit', 'user')
@@ -394,7 +445,7 @@ def group_permission():
     session.current_permission = current_permission  # <===
     
     actions = ['view','add','edit','delete']
-    objects = ['user','library','wh docs','bsm docs','sales docs']
+    objects = ['user','library','wh docs','bsm docs','sales docs', 'accountability']
 
     checked = [
         ['checked' if actions[0]+'|'+objects[i] in current_permission else None for i, v in enumerate(objects)],
@@ -471,6 +522,10 @@ def group_rank_change():
     return
 
 
+can_view_acc = auth.has_permission('view', 'accountability') or session.adminuser
+can_add_acc = auth.has_permission('add', 'accountability') or session.adminuser
+can_edit_acc = auth.has_permission('edit', 'accountability') or session.adminuser
+can_delete_acc = auth.has_permission('delete', 'accountability') or session.adminuser
 @auth.requires_login()
 def ws_accountability():
     title = 'Accountabilities'
@@ -500,7 +555,7 @@ def ws_accountability():
             wh_ops = db(db.warehouse.region_id==auth.user.region)
             db.ws_accountability.wh_id.requires = IS_IN_DB(db, 'warehouse.id', '%(warehouse_name)s', zero=None)
 
-    grid = SQLFORM.grid(query, represent_none = '', editable=False, deletable=session.adminusers, csv=None,
+    grid = SQLFORM.grid(query, represent_none = '', create=can_add_acc, editable=False, deletable=can_delete_acc, csv=None,
         formname='grid_accountability')
 
     accountability_id=None
@@ -509,6 +564,7 @@ def ws_accountability():
         accountability_id=request.args(2)
 
     return dict(grid=grid, title=title, accountability_id=accountability_id)
+
 
 @auth.requires_login()
 def ws_accountability_user():
@@ -530,7 +586,8 @@ def ws_accountability_user():
     grid.element('thead', replace=None)
     grid.element('.web2py_console', replace=None)
     form = None
-    if session.adminusers:
+    # if session.adminusers:
+    if can_edit_acc:
 
         u = auth.user
         if u.branch:

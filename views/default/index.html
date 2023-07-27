@@ -2,6 +2,9 @@
 <h2>Dashboard</h2>
 {{if auth.user:}}
     Hello, {{=auth.user.first_name}}.
+    {{if auth.has_membership('wh supervisor'):}}
+    {{=LOAD(f='dashboard_ws.load', ajax=True, target='dashboard_ws_div')}}
+    {{pass}}
 {{else:}}
     Please login to access our services.
 {{pass}}
