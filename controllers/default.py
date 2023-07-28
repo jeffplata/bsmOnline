@@ -18,10 +18,6 @@ def dashboard_ws():
         db.ws_accountability.ALL, db.auth_user.ALL, db.warehouse.ALL,
         join=[db.auth_user.on(db.ws_accountability.ws_id==db.auth_user.id),
             db.warehouse.on(db.warehouse.id==db.ws_accountability.wh_id)])
-    # dropdown = DIV(BUTTON('Documents', _class='btn btn-secondary dropdown-toggle', _type='button', _id='ddbtn', data={'toggle':'dropdown'} ),
-    #     DIV(A('WSR', _class='dropdown-item'), A('WSI', _class='dropdown-item'), 
-    #         _class='dropdown-menu'),
-    #     _class='dropdown')
 
     def get_dropdown(id):
         props = {'w2p_target':'main_div_comp', 'w2p_method':'GET'}

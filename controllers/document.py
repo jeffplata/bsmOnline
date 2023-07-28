@@ -62,8 +62,8 @@ def wsr():
         # user_accountabilities = db(db.ws_accountability.ws_id == auth.user_id).select()
         # if len(user_accountabilities) > 1:
         #     redirect()
-        if session.accountability == None:
-            redirect(URL('select_accountability', user_signature=True))
+        # if session.accountability == None:
+        #     redirect(URL('select_accountability', user_signature=True))
 
         user_whses = db(db.user_warehouse.user_id==auth.user_id).select()
         wh_ids = [i.warehouse_id for i in user_whses]
