@@ -112,11 +112,32 @@ def wsr():
         if session.accountability:
             del session.accountability
 
+    # from pydal.helpers.methods import smart_query
+    # def search_with_this(fields, keywords):
+    #     key = keywords.strip()
+    #     if key and not '"' in key:
+    #         SEARCHABLE_TYPES = ('string', 'text', 'list:string')
+    #         sfields = [field for field in fields if field.type in SEARCHABLE_TYPES]
+    #         if False: # settings.global_settings.web2py_runtime_gae:
+    #             return reduce(lambda a,b: a|b, [field.contains(key) for field in sfields])
+    #         else:
+    #             queries = [db.WSR.id>0]
+    #             queries.append((db.WSR.doc_number.contains(key))
+    #                 )
+    #             return reduce(lambda a,b:a&b,[
+    #                     reduce(lambda a,b: a|b, [
+    #                             field.contains(k) for field in sfields]
+    #                            ) for k in key.split()])
+
+    #     else:
+    #         return smart_query(fields, key)
+
     db.WSR.age.listable = False
     db.WSR.stock_condition.listable = False
     db.WSR.MC.listable = False
     db.WSR.purity.listable = False
-    grid = SQLFORM.grid(db.WSR, represent_none='',
+    # grid = SQLFORM.grid(db.WSR, represent_none='', searchable=search_with_this,
+    grid = SQLFORM.grid(db.WSR, represent_none='', 
         create=can_add_wh_docs, editable=can_edit_wh_docs, deletable=can_delete_wh_docs)
     append_record_signature(grid, db.WSR(request.args(2)))
 
