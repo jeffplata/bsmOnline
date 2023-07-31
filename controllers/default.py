@@ -19,11 +19,12 @@ def dashboard_ws():
         join=[db.auth_user.on(db.ws_accountability.ws_id==db.auth_user.id),
             db.warehouse.on(db.warehouse.id==db.ws_accountability.wh_id)])
 
-    def get_dropdown(id):
-        props = {'w2p_target':'main_div_comp', 'w2p_method':'GET'}
+    def get_dropdown(id, ws_id, wh_id):
+        data_props = {'w2p_target':'main_div_comp', 'w2p_method':'GET'}
+        pass_vars = {'accountability_id':id, 'ws_id':ws_id, 'wh_id':wh_id}
         return DIV(BUTTON('Documents', _class='btn btn-sm btn-secondary dropdown-toggle', _type='button', _id=id, data={'toggle':'dropdown'} ),
-            DIV(A('WSR', _class='dropdown-item', _href=URL('document', 'wsr', vars={'accountability_id':id}), data={**props}), 
-                A('WSI', _class='dropdown-item', _href=URL('document', 'wsi'), data={**props}), 
+            DIV(A('WSR', _class='dropdown-item', _href=URL('document', 'wsr', vars=pass_vars), data=data_props), 
+                A('WSI', _class='dropdown-item', _href=URL('document', 'wsi'), data=data_props), 
                 _class='dropdown-menu'),
             _class='dropdown')
 
@@ -33,7 +34,7 @@ def dashboard_ws():
             i.auth_user.first_name+' '+i.auth_user.last_name, 
             i.ws_accountability.period_start,
             i.ws_accountability.period_end if i.ws_accountability.period_end else '',
-            get_dropdown(i.ws_accountability.id)
+            get_dropdown(i.ws_accountability.id, i.ws_accountability.ws_id, i.ws_accountability.wh_id)
             ) for i in accountabilities], ),
         _class='table table-responsive')
     content = DIV(
@@ -596,9 +597,9 @@ def ws_accountability_user():
 
         # request.args = 'action/table/id'
         acc_users = db(db.ws_accountability_user.ws_accountability_id==request.args(0)).select(db.ws_accountability_user.user_id)
-        print(request.args)
-        print('request.args(2)', request.args(2))
-        print(acc_users)
+        # print(request.args)
+        # print('request.args(2)', request.args(2))
+        # print(acc_users)
         au = [i.user_id for i in acc_users]
         if user_ids: 
             [(user_ids.remove(x) if x in user_ids else None) for x in au]

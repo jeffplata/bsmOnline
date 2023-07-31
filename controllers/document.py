@@ -58,7 +58,13 @@ def wsr():
         SELECT('','Jobet Atienza, Tacloban Port Area, 1/1/2021', 'Jobet Atienza, Baybay, 8/1/2023'),
         _name="account_filter_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
 
+    if request.vars:
+        print(request.vars)
+    else:
+        print('no request.vars')
+
     if request.args(0) == 'new':
+
         # user_accountabilities = db(db.ws_accountability.ws_id == auth.user_id).select()
         # if len(user_accountabilities) > 1:
         #     redirect()
