@@ -21,7 +21,8 @@ def dashboard_ws():
 
     def get_dropdown(id, ws_id, wh_id):
         data_props = {'w2p_target':'main_div_comp', 'w2p_method':'GET'}
-        pass_vars = {'accountability_id':id, 'ws_id':ws_id, 'wh_id':wh_id}
+        pass_vars = {'acc_id':id, 'ws_id':ws_id, 'wh_id':wh_id}
+        # pass_vars = {'ids':{id, ws_id, wh_id}}
         return DIV(BUTTON('Documents', _class='btn btn-sm btn-secondary dropdown-toggle', _type='button', _id=id, data={'toggle':'dropdown'} ),
             DIV(A('WSR', _class='dropdown-item', _href=URL('document', 'wsr', vars=pass_vars), data=data_props), 
                 A('WSI', _class='dropdown-item', _href=URL('document', 'wsi'), data=data_props), 

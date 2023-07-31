@@ -59,7 +59,13 @@ def wsr():
         _name="account_filter_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
 
     if request.vars:
-        print(request.vars)
+        # print(request.vars)
+        if 'keywords' in request.vars:
+            print('keyword in request.vars')
+            request.vars.acc_id = request.vars.acc_id[0]
+            request.vars.ws_id = request.vars.ws_id[0]
+            request.vars.wh_id = request.vars.wh_id[0]
+            print(request.vars)
     else:
         print('no request.vars')
 
