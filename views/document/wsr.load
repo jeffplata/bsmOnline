@@ -14,7 +14,7 @@
         c = varcon[ $(this).find(':selected').val() ];
         $('#WSR_container').val(c).change();
     });
-    $('#WSR_bags').on('change', function(e) {
+    $('#WSR_bags').on('change keyup paste', function(e) {
         sel_cont = $('#WSR_container').find(':selected')
         bags = parseFloat($(this).val());
         mts_wt = parseFloat(contcapacity[ sel_cont.val() ][1]) * bags;
@@ -26,7 +26,7 @@
         $('#WSR_gross_weight').val(gw).change();
         $('#WSR_net_weight').val(nw).change();
     });
-    $('#WSR_gross_weight').on('change paste keyup', function(e) {
+    $('#WSR_gross_weight').on('paste keyup', function(e) {
         sel_cont = $('#WSR_container').find(':selected');
         bags = parseFloat($('#WSR_bags').val());
         cw = parseFloat( contcapacity[ sel_cont.val() ][1] ) * bags;
@@ -34,5 +34,14 @@
         nw = gw - cw
         if (isNaN(nw)) {nw = 0}
         $('#WSR_net_weight').val(nw).change()
+    });
+    $('#WSR_net_weight').on('paste keyup', function(e) {
+        sel_cont = $('#WSR_container').find(':selected');
+        bags = parseFloat($('#WSR_bags').val());
+        cw = parseFloat( contcapacity[ sel_cont.val() ][1] ) * bags;
+        nw = parseFloat($(this).val());
+        gw = nw + cw
+        if (isNaN(gw)) {gw = 0}
+        $('#WSR_gross_weight').val(gw).change()
     });
 </script>

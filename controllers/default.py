@@ -21,8 +21,8 @@ def dashboard_ws():
 
     def get_dropdown(id, ws_id, wh_id):
         data_props = {'w2p_target':'main_div_comp', 'w2p_method':'GET'}
-        pass_vars = {'acc_id':id, 'ws_id':ws_id, 'wh_id':wh_id}
-        # pass_vars = {'ids':{id, ws_id, wh_id}}
+        # pass_vars = {'acc_id':id, 'ws_id':ws_id, 'wh_id':wh_id}
+        pass_vars = {'acc_id': id}
         return DIV(BUTTON('Documents', _class='btn btn-sm btn-secondary dropdown-toggle', _type='button', _id=id, data={'toggle':'dropdown'} ),
             DIV(A('WSR', _class='dropdown-item', _href=URL('document', 'wsr', vars=pass_vars), data=data_props), 
                 A('WSI', _class='dropdown-item', _href=URL('document', 'wsi'), data=data_props), 
@@ -181,6 +181,11 @@ def user_manage():
                           ((r.auth_user.id not in user_highest_ranks.keys()) or (user_highest_ranks[r.auth_user.id] >= curr_user_highest_rank))
                         ) #or (r.auth_user.id == me)
                     ) 
+
+    if request.vars:
+        if 'keywords' in request.vars:
+            if 'order' in request.vars:
+                request.vars.order = request.vars.order[0]
     db.region.id.listable = False
     db.branch.id.listable = False
     grid = SQLFORM.grid(query, 

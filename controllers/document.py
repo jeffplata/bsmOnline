@@ -49,33 +49,28 @@ def wsr():
     response.view = 'document/wsr.load'
     title = 'Warehouse Stock Receipt'
 
+    if request.vars:
+        if 'keywords' in request.vars:
+            request.vars.acc_id = request.vars.acc_id[0]
+            # request.vars.ws_id = request.vars.ws_id[0]
+            # request.vars.wh_id = request.vars.wh_id[0]
+        if 'order' in request.vars:
+            request.vars.order = request.vars.order[0]
+
+        acc_info = db(db.ws_accountability.id == request.vars.acc_id).select(
+            db.ws_accountability.ALL, db.auth_user.ALL, db.warehouse.ALL,
+            join=[db.auth_user.on(db.ws_accountability.ws_id==db.auth_user.id),
+                db.warehouse.on(db.warehouse.id==db.ws_accountability.wh_id)])
+        
+    queries = [db.WSR.id > 0]
+    if 'acc_id' in request.vars:
+        queries.append(db.WSR.accountability_id == request.vars.acc_id)
+    query = reduce(lambda a, b: (a & b), queries)
+
     var_container = dict((r.id, r.default_container) for r in db().select(db.variety.ALL))
     cont_capacity = dict((r.id, [r.wt_capacity, r.weight]) for r in db().select(db.container.ALL))
 
-    s = "margin: 0px 5px 3px 0px;"
-    account_filter = FORM(
-        LABEL('Accountability:', _style=s),
-        SELECT('','Jobet Atienza, Tacloban Port Area, 1/1/2021', 'Jobet Atienza, Baybay, 8/1/2023'),
-        _name="account_filter_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
-
-    if request.vars:
-        # print(request.vars)
-        if 'keywords' in request.vars:
-            print('keyword in request.vars')
-            request.vars.acc_id = request.vars.acc_id[0]
-            request.vars.ws_id = request.vars.ws_id[0]
-            request.vars.wh_id = request.vars.wh_id[0]
-            print(request.vars)
-    else:
-        print('no request.vars')
-
     if request.args(0) == 'new':
-
-        # user_accountabilities = db(db.ws_accountability.ws_id == auth.user_id).select()
-        # if len(user_accountabilities) > 1:
-        #     redirect()
-        # if session.accountability == None:
-        #     redirect(URL('select_accountability', user_signature=True))
 
         user_whses = db(db.user_warehouse.user_id==auth.user_id).select()
         wh_ids = [i.warehouse_id for i in user_whses]
@@ -120,6 +115,16 @@ def wsr():
 
         db.WSR.variety.default = list(var_container.keys())[0]
         db.WSR.container.default = list(var_container.values())[0]
+
+        if 'acc_id' in request.vars:
+            db.WSR.accountability_id.default = request.vars.acc_id
+            db.WSR.accountability_id.writable = False
+            db.WSR.accountability_id.readable = False
+            db.WSR.warehouse.default = request.vars.wh_id
+            db.WSR.wh_supervisor.default = request.vars.ws_id
+            db.WSR.warehouse.writable = False
+            db.WSR.wh_supervisor.writable = False
+
     else:
         if session.accountability:
             del session.accountability
@@ -144,14 +149,26 @@ def wsr():
     #     else:
     #         return smart_query(fields, key)
 
+    db.WSR.accountability_id.listable = False
     db.WSR.age.listable = False
     db.WSR.stock_condition.listable = False
     db.WSR.MC.listable = False
     db.WSR.purity.listable = False
     # grid = SQLFORM.grid(db.WSR, represent_none='', searchable=search_with_this,
-    grid = SQLFORM.grid(db.WSR, represent_none='', 
+    grid = SQLFORM.grid(query, represent_none='', 
         create=can_add_wh_docs, editable=can_edit_wh_docs, deletable=can_delete_wh_docs)
     append_record_signature(grid, db.WSR(request.args(2)))
+
+    if grid.create_form or grid.update_form:
+        if 'acc_id' in request.vars:
+            lbl_class = grid.create_form.element('#WSR_doc_date__label')['_class']
+            acc_info = DIV(
+                LABEL('Accountability (%s):' % request.vars.acc_id, _class=lbl_class),
+                DIV(DIV('Wh Supervisor: (%s)' % request.vars.ws_id), 
+                    DIV('Warehouse: (%s)' % request.vars.wh_id),
+                    _class='col-sm-9'),
+                _class='form-group row py-2 border bg-light')
+        grid.create_form.insert(0, acc_info)
 
     return locals()
 

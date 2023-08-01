@@ -65,6 +65,7 @@ def init_tables_libraries():
     if db(db.commodity.id).count() < 1:
         db.commodity.insert(commodity_name='Local Palay', is_cereal=True)
         db.commodity.insert(commodity_name='Local Rice', is_cereal=True)
+        db.commodity.insert(commodity_name='By-products', is_cereal=False)
 
     if db(db.container.id).count() < 1:
         db.container.insert(container_name='PPR E50', container_shortname='E50', weight=0.095)

@@ -1,3 +1,4 @@
+from gluon.storage import Storage
 
 me = auth.user_id
 mdy = '%m/%d/%Y'
@@ -188,9 +189,10 @@ doc_stamp = db.Table(db, 'doc_stamp',
     Field('doc_number', 'string', length=40, unique=True))
 
 db.define_table('WSR',
-    doc_stamp,
+    Field('accountability_id', db.ws_accountability, ondelete='RESTRICT'),
     Field('wh_supervisor', db.auth_user, label='Warehouse Supervisor'),
     Field('warehouse', 'reference warehouse', requires=IS_IN_DB(db, db.warehouse.id, '%(warehouse_name)s', zero=None)),
+    doc_stamp,
     Field('received_from', 'string', length=80),
     Field('reference_doc', 'string', length=20),
     Field('variety', 'reference variety', ondelete='RESTRICT', requires=IS_IN_DB(db, db.variety.id, '%(variety_name)s', zero=None)),
